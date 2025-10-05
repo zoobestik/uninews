@@ -19,6 +19,18 @@ async fn init_config<P: AsRef<Path>>(path: P) -> Result<Config, Box<dyn std::err
     Ok(cfg)
 }
 
+fn init_logger() {
+    let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+
+    let subscriber = FmtSubscriber::builder()
+        .with_thread_names(true)
+        .with_target(false)
+        .with_env_filter(filter)
+        .finish();
+
+    tracing::subscriber::set_global_default(subscriber).expect("Setting default subscriber failed");
+}
+
 pub async fn run() {
     init_logger();
     dotenvy::dotenv().ok();
@@ -43,16 +55,4 @@ pub async fn run() {
             }
         );
     });
-}
-
-fn init_logger() {
-    let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
-
-    let subscriber = FmtSubscriber::builder()
-        .with_thread_names(true)
-        .with_target(false)
-        .with_env_filter(filter)
-        .finish();
-
-    tracing::subscriber::set_global_default(subscriber).expect("Setting default subscriber failed");
 }
