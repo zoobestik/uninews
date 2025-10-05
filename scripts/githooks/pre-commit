@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Pre-commit hook to ensure code is formatted.
+# Install locally with:
+#   git config core.hooksPath scripts/githooks
+
+set -euo pipefail
+
+if ! command -v cargo >/dev/null 2>&1; then
+  echo "cargo is not installed; skipping fmt check" >&2
+  exit 0
+fi
+
+echo "Running cargo ci..."
+cargo fmt --all && cargo clippy --all-targets --all-features -- -D warnings && cargo test

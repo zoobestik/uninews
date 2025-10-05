@@ -1,0 +1,28 @@
+# Auto detect text files and perform LF normalization
+* text=auto eol=lf
+
+# Rust specific files
+*.rs text diff=rust
+Cargo.toml text
+Cargo.lock text
+
+# Git attributes for binary files
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+
+# Documents
+*.md text diff=markdown
+
+# Scripts
+*.sh text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Configuration files
+*.yml text
+*.yaml text
+*.json text
+*.toml text

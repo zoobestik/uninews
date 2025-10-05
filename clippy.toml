@@ -1,0 +1,4 @@
+# Minimal Clippy configuration.
+# Keep it small and standards-compliant; adjust thresholds as the project grows.
+
+too-many-arguments-threshold = 8
