@@ -1,3 +1,6 @@
+[![License-MIT](https://img.shields.io/badge/License-MIT-teal.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/zoobestik/uninews/actions/workflows/ci.yml/badge.svg)](https://github.com/zoobestik/uninews/actions/workflows/ci.yml)
+
 # UnifyNews
 
 A small Rust workspace for experimenting with collecting content sources into a single feed pipeline.

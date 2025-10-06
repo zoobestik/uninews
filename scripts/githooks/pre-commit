@@ -5,15 +5,16 @@
 
 set -euo pipefail
 
+if ! command -v taplo >/dev/null 2>&1; then
+  echo "taplo is not installed; skipping taplo fmt" >&2
+else
+    taplo fmt
+fi
+
 if ! command -v cargo >/dev/null 2>&1; then
   echo "cargo is not installed; skipping fmt check" >&2
   exit 0
 fi
 
-if ! command -v taplo >/dev/null 2>&1; then
-  echo "taplo is not installed; skipping fmt check" >&2
-  exit 0
-fi
-
 echo "Running cargo ci..."
-taplo fmt && cargo fmt --all && cargo clippy --all-targets --all-features -- -D warnings && cargo test
+cargo fmt --all && cargo clippy --all-targets --all-features -- -D warnings && cargo test
