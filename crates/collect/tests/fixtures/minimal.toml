@@ -1,0 +1,6 @@
+# Minimal example configuration for feed_collect tests
+[[atom]]
+url = "https://example.com/feed.xml"
+
+[[telegram]]
+nickname = "rustaceans"
