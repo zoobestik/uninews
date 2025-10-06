@@ -2,7 +2,7 @@
 
 ## Configuration location and precedence
 
-1. If `MYFEED_CONFIG_PATH` is set, its value is used.
+1. If `UNINEWS_CONFIG_PATH` is set, its value is used.
 2. Otherwise, the program uses `./config.toml` relative to the current working directory.
 
 ## Minimal complete example

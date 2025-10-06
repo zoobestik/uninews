@@ -19,12 +19,12 @@ A small Rust workspace for experimenting with collecting content sources into a 
 ### Run
 
 ```bash
-cargo run -p feed_collect
+cargo run -p uninews_collect
 ```
 
 Set log level (optional):
 ```bash
-RUST_LOG=debug cargo run -p feed_collect
+RUST_LOG=debug cargo run -p uninews_collect
 ```
 
 ## Configuration

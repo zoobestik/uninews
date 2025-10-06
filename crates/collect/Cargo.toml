@@ -1,5 +1,5 @@
 [package]
-name = "feed_collect"
+name = "uninews_collect"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -8,7 +8,10 @@ repository.workspace = true
 homepage.workspace = true
 publish.workspace = true
 license.workspace = true
-license-file.workspace = true
+
+[[bin]]
+name = "uncol"
+path = "src/main.rs"
 
 [dependencies]
 tokio.workspace = true

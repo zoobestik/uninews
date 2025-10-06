@@ -5,13 +5,12 @@ members = ["crates/*"]
 [workspace.package]
 version = "1.0.0-alpha.1"
 edition = "2024"
-description = ""
+description = "A small Rust workspace for experimenting with collecting content sources into a single feed pipeline."
 authors = ["zoobestik <kb.chernenko@gmail.com>"]
-repository = "https://github.com/zoobestik/feed-server"
-homepage = "https://github.com/zoobestik/feed-server"
-publish = false
+repository = "https://github.com/zoobestik/uninews"
+homepage = "https://github.com/zoobestik/uninews"
 license = "MIT"
-license-file = "./LICENSE.md"
+publish = false
 
 [workspace.dependencies]
 tokio = { version = "^1.47.1", features = ["macros", "rt-multi-thread", "fs"] }

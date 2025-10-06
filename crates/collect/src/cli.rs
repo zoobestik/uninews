@@ -36,7 +36,7 @@ pub async fn run() {
     dotenvy::dotenv().ok();
 
     let config_path =
-        env::var("MYFEED_CONFIG_PATH").unwrap_or_else(|_| "./config.toml".to_string());
+        env::var("UNINEWS_CONFIG_PATH").unwrap_or_else(|_| "./config.toml".to_string());
 
     let config = match init_config(config_path.clone()).await {
         Ok(cfg) => cfg,
