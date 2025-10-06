@@ -1,4 +1,3 @@
 [toolchain]
 channel = "stable"
-targets = []
-components = ["rustfmt", "clippy", "taplo-cli"]
+components = ["clippy", "rustfmt"]

@@ -1,21 +1,22 @@
 [workspace]
-resolver = "3"
 members = ["crates/*"]
+resolver = "3"
 
 [workspace.package]
-version = "1.0.0-alpha.1"
 edition = "2024"
-description = "A small Rust workspace for experimenting with collecting content sources into a single feed pipeline."
+version = "1.0.0-alpha.1"
+
 authors = ["zoobestik <kb.chernenko@gmail.com>"]
-repository = "https://github.com/zoobestik/uninews"
+description = "A small Rust workspace for experimenting with collecting content sources into a single feed pipeline."
 homepage = "https://github.com/zoobestik/uninews"
 license = "MIT"
 publish = false
+repository = "https://github.com/zoobestik/uninews"
 
 [workspace.dependencies]
-tokio = { version = "^1.47.1", features = ["macros", "rt-multi-thread", "fs"] }
-serde = { version = "^1.0.228", features = ["derive", "rc"] }
-toml = { version = "^0.9.7" }
 dotenvy = { version = "^0.15.7" }
+serde = { version = "^1.0.228", features = ["derive", "rc"] }
+tokio = { version = "^1.47.1", features = ["fs", "macros", "rt-multi-thread"] }
+toml = { version = "^0.9.7" }
 tracing = { version = "^0.1.41" }
 tracing-subscriber = { version = "^0.3.20", features = ["env-filter", "json"] }

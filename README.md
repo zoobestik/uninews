@@ -1,5 +1,5 @@
-[![License-MIT](https://img.shields.io/badge/License-MIT-teal.svg)](https://opensource.org/licenses/MIT)
-[![CI](https://github.com/zoobestik/uninews/actions/workflows/ci.yml/badge.svg)](https://github.com/zoobestik/uninews/actions/workflows/ci.yml)
+[![License-MIT][mit-img]][mit-url]
+[![CI][ci-img]][ci-url]
 
 # UnifyNews
 
@@ -18,6 +18,7 @@ A small Rust workspace for experimenting with collecting content sources into a 
 ### Prerequisites
 
 - Rust toolchain: stable (as per [`rust-toolchain.toml`](./rust-toolchain.toml))
+- Install [Taplo](https://github.com/tamasfe/taplo): `cargo install taplo-cli`
 
 ### Run
 
@@ -48,6 +49,14 @@ Full example and field reference: [docs/configuration.md](docs/configuration.md)
 Issues and PRs are not welcome. 🙃
 Please open an issue to discuss bigger changes.
 
-## License
+## Acknowledgements
+[![MIT license][mit-img]][mit-url] [![Develop By][author-img]][author-url]
 
-MIT — see [LICENSE](LICENSE).
+[mit-img]: https://img.shields.io/badge/License-MIT-teal.svg
+[mit-url]: https://opensource.org/licenses/MIT
+
+[ci-img]: https://github.com/zoobestik/uninews/actions/workflows/ci.yml/badge.svg
+[ci-url]: https://github.com/zoobestik/uninews/actions/workflows/ci.yml
+
+[author-img]: https://img.shields.io/badge/develop%20by-zoobestik-blue.svg?style=flat
+[author-url]: https://ru.linkedin.com/in/kbchernenko
