@@ -10,6 +10,8 @@ authors = ["zoobestik <kb.chernenko@gmail.com>"]
 repository = "https://github.com/zoobestik/feed-server"
 homepage = "https://github.com/zoobestik/feed-server"
 publish = false
+license = "MIT"
+license-file = "./LICENSE.md"
 
 [workspace.dependencies]
 tokio = { version = "^1.47.1", features = ["macros", "rt-multi-thread", "fs"] }

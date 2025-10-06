@@ -7,6 +7,8 @@ authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
 publish.workspace = true
+license.workspace = true
+license-file.workspace = true
 
 [dependencies]
 tokio.workspace = true

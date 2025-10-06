@@ -3,7 +3,9 @@
 *.iws
 *.iml
 
-.env
+/.junie
+
+/.env
 /target
 /data
 
