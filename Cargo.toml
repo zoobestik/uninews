@@ -17,6 +17,5 @@ tokio = { version = "^1.47.1", features = ["macros", "rt-multi-thread", "fs"] }
 serde = { version = "^1.0.228", features = ["derive", "rc"] }
 toml = { version = "^0.9.7" }
 dotenvy = { version = "^0.15.7" }
-
 tracing = { version = "^0.1.41" }
 tracing-subscriber = { version = "^0.3.20", features = ["env-filter", "json"] }

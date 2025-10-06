@@ -5,26 +5,26 @@ use serde::Deserialize;
 pub struct Config {
     #[serde(default)]
     #[serde(rename = "atom")]
-    atoms: Vec<Atom>,
+    atoms_channels: Vec<Atom>,
 
     #[serde(default)]
     #[serde(rename = "telegram")]
-    telegrams: Vec<TelegramChannel>,
+    telegram_channels: Vec<TelegramChannel>,
 }
 
 impl Config {
     #[must_use]
     pub const fn new() -> Self {
         Self {
-            atoms: Vec::new(),
-            telegrams: Vec::new(),
+            atoms_channels: Vec::new(),
+            telegram_channels: Vec::new(),
         }
     }
 
     pub fn list(&'_ self) -> impl Iterator<Item = Source<'_>> {
         {
-            let iter_atoms = self.atoms.iter().map(Source::Atom);
-            let iter_telegrams = self.telegrams.iter().map(Source::TelegramChannel);
+            let iter_atoms = self.atoms_channels.iter().map(Source::Atom);
+            let iter_telegrams = self.telegram_channels.iter().map(Source::TelegramChannel);
 
             iter_atoms.chain(iter_telegrams)
         }
