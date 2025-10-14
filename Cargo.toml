@@ -14,7 +14,9 @@ publish = false
 repository = "https://github.com/zoobestik/uninews"
 
 [workspace.dependencies]
+async-trait = { version = "^0.1.89" }
 dotenvy = { version = "^0.15.7" }
+futures = { version = "^0.3.31" }
 serde = { version = "^1.0.228", features = ["derive", "rc"] }
 tokio = { version = "^1.47.1", features = ["fs", "macros", "rt-multi-thread"] }
 toml = { version = "^0.9.7" }

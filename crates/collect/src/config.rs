@@ -1,140 +1,31 @@
-use crate::sources::{Atom, Source, TelegramChannel};
-use serde::Deserialize;
+use crate::source::{Atom, Source, TelegramChannel};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct Config {
-    #[serde(default)]
-    #[serde(rename = "atom")]
     atoms_channels: Vec<Atom>,
-
-    #[serde(default)]
-    #[serde(rename = "telegram")]
     telegram_channels: Vec<TelegramChannel>,
 }
 
 impl Config {
     #[must_use]
-    pub const fn new() -> Self {
+    pub const fn new(atoms_channels: Vec<Atom>, telegram_channels: Vec<TelegramChannel>) -> Self {
         Self {
-            atoms_channels: Vec::new(),
-            telegram_channels: Vec::new(),
+            atoms_channels,
+            telegram_channels,
         }
     }
 
-    pub fn list(&'_ self) -> impl Iterator<Item = Source<'_>> {
-        {
-            let iter_atoms = self.atoms_channels.iter().map(Source::Atom);
-            let iter_telegrams = self.telegram_channels.iter().map(Source::TelegramChannel);
+    pub fn list(&self) -> impl Iterator<Item = &dyn Source> {
+        let atom_iter = self
+            .atoms_channels
+            .iter()
+            .map(|atom_source| atom_source as &dyn Source);
 
-            iter_atoms.chain(iter_telegrams)
-        }
-    }
-}
+        let rss_iter = self
+            .telegram_channels
+            .iter()
+            .map(|rss_source| rss_source as &dyn Source);
 
-impl Default for Config {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::sources::{Source, SourceOrigin};
-
-    #[test]
-    fn config_list_default_is_empty() {
-        assert_eq!(Config::default().list().count(), 0);
-        assert_eq!(Config::new().list().count(), 0);
-        assert!(
-            Config::new().list().next().is_none(),
-            "new() should produce empty list"
-        );
-    }
-
-    // language=TOML
-    const MINIMAL_VALID_TOML_STR: &str = r#"
-[[atom]]
-url = "https://example.com/feed.xml"
-
-[[telegram]]
-nickname = "rustaceans"
-"#;
-
-    #[test]
-    fn deserialize_minimal_toml() {
-        let cfg: Config = toml::from_str(MINIMAL_VALID_TOML_STR).expect("valid minimal config");
-
-        let items: Vec<_> = cfg.list().collect();
-
-        assert_eq!(items.len(), 2);
-
-        match &items[0] {
-            Source::Atom(a) => assert_eq!(a.original_url(), "https://example.com/feed.xml"),
-            Source::TelegramChannel(_) => panic!("first should be Atom"),
-        }
-
-        match &items[1] {
-            Source::TelegramChannel(t) => assert_eq!(t.original_url(), "https://t.me/rustaceans"),
-            Source::Atom(_) => panic!("second should be TelegramChannel"),
-        }
-    }
-
-    // language=TOML
-    const WITH_MANY_ENTRIES_TOML_STR: &str = r#"
-[[atom]]
-url = "https://a.com/1"
-[[atom]]
-url = "https://a.com/2"
-
-[[telegram]]
-nickname = "aaaaa"
-[[telegram]]
-nickname = "bbbbb"
-"#;
-
-    const WITH_MANY_ENTRIES_URLS: &[&str] = &[
-        "https://a.com/1",
-        "https://a.com/2",
-        "https://t.me/aaaaa",
-        "https://t.me/bbbbb",
-    ];
-
-    #[test]
-    fn deserialize_with_many_entries() {
-        let cfg: Config = toml::from_str(WITH_MANY_ENTRIES_TOML_STR).expect("valid config");
-
-        let urls: Vec<String> = cfg
-            .list()
-            .map(|s| match s {
-                Source::Atom(a) => a.original_url(),
-                Source::TelegramChannel(t) => t.original_url(),
-            })
-            .collect();
-
-        assert_eq!(
-            urls,
-            WITH_MANY_ENTRIES_URLS
-                .iter()
-                .map(|&s| s.to_string())
-                .collect::<Vec<String>>()
-        );
-    }
-
-    // language=TOML
-    const DESERIALIZE_FAILURES_BAD_TG: &str = r"[[telegram]]
-nickname = false
-";
-
-    // language=TOML
-    const DESERIALIZE_FAILURES_BAD_ATOM: &str = r"[[atom]]
-url = 1
-";
-
-    #[test]
-    fn deserialize_failures() {
-        assert!(toml::from_str::<Config>(DESERIALIZE_FAILURES_BAD_ATOM).is_err());
-        assert!(toml::from_str::<Config>(DESERIALIZE_FAILURES_BAD_TG).is_err());
-        assert!(toml::from_str::<Config>("[telegram\n nickname = 'abc'").is_err());
+        atom_iter.chain(rss_iter)
     }
 }
