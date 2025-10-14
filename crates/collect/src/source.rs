@@ -4,12 +4,9 @@ pub mod telegram;
 use async_trait::async_trait;
 use atom::Atom;
 use telegram::TelegramChannel;
-use url::Url;
 
 #[async_trait]
 pub trait Source: Send + Sync {
-    fn original_url(&self) -> &Url;
-
     async fn watch_updates(&self);
 }
 

@@ -69,11 +69,7 @@ impl TelegramChannel {
 
 #[async_trait]
 impl Source for TelegramChannel {
-    fn original_url(&self) -> &Url {
-        &self.channel_url
-    }
-
     async fn watch_updates(&self) {
-        println!("Running source: {}", self.original_url());
+        println!("Running source: {}", self.channel_url);
     }
 }

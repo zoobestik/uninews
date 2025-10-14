@@ -43,11 +43,7 @@ impl Atom {
 
 #[async_trait]
 impl Source for Atom {
-    fn original_url(&self) -> &Url {
-        &self.source_url
-    }
-
     async fn watch_updates(&self) {
-        println!("Running source: {}", self.original_url());
+        println!("Running source: {}", self.source_url);
     }
 }
