@@ -52,7 +52,7 @@ jobs:
       - name: Check TOML formatting
         run: taplo lint
 
-      - name: Check source formatting
+      - name: Check sources formatting
         run: cargo fmt --all -- --check
 
       - name: Clippy (lint)

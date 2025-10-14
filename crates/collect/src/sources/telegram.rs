@@ -70,6 +70,6 @@ impl TelegramChannel {
 #[async_trait]
 impl Source for TelegramChannel {
     async fn watch_updates(&self) {
-        println!("Running source: {}", self.channel_url);
+        println!("Running sources: {}", self.channel_url);
     }
 }
