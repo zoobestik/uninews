@@ -1,7 +1,7 @@
 [![License-MIT][mit-img]][mit-url]
 [![CI][ci-img]][ci-url]
 
-# UnifyNews
+# UniNews
 
 A small Rust workspace for experimenting with collecting content sources into a single feed pipeline.
 
@@ -36,7 +36,7 @@ RUST_LOG=debug cargo run -p uninews_collect
 Short snippet:
 ```toml
 [[atom]]
-url = "..."
+source_url = "https://example.com/feed.xml"
 
 [[telegram]]
 nickname = "..."
