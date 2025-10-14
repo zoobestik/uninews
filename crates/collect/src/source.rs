@@ -1,10 +1,9 @@
-mod atom;
-mod telegram;
-
-pub use atom::*;
-pub use telegram::*;
+pub mod atom;
+pub mod telegram;
 
 use async_trait::async_trait;
+use atom::Atom;
+use telegram::TelegramChannel;
 use url::Url;
 
 #[async_trait]

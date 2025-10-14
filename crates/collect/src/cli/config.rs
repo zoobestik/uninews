@@ -1,22 +1,29 @@
 use crate::config::Config;
-use crate::source::{Atom, TelegramChannel};
+use crate::source::atom::{Atom, RefreshPeriod};
+use crate::source::telegram::TelegramChannel;
 
 use serde::Deserialize;
 use std::path::Path;
 use tokio::fs::read_to_string;
-use url::Url;
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct AtomRaw {
-    pub source_url: Url,
+    pub source_url: String,
+
+    #[serde(default = "default_refresh_period")]
+    pub refresh_period: RefreshPeriod,
+}
+
+const fn default_refresh_period() -> RefreshPeriod {
+    RefreshPeriod::Seconds(60)
 }
 
 impl TryFrom<AtomRaw> for Atom {
     type Error = String;
 
     fn try_from(raw: AtomRaw) -> Result<Self, Self::Error> {
-        Self::try_new(raw.source_url)
+        Self::try_new(&raw.source_url, raw.refresh_period)
     }
 }
 

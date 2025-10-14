@@ -24,7 +24,7 @@ pub async fn run() {
     let config = match init_config(Path::new(&config_path)).await {
         Ok(cfg) => cfg,
         Err(e) => {
-            error!("Failed to read config file '{config_path}': {e}");
+            error!("'{config_path}': {e}");
             process::exit(1);
         }
     };

@@ -1,4 +1,6 @@
-use crate::source::{Atom, Source, TelegramChannel};
+use crate::source::Source;
+use crate::source::atom::Atom;
+use crate::source::telegram::TelegramChannel;
 
 #[derive(Debug)]
 pub struct Config {
