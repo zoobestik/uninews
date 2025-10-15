@@ -21,12 +21,12 @@ impl std::fmt::Display for RefreshPeriod {
 }
 
 pub struct Atom {
+    http_service: Arc<dyn HttpService>,
+    news_service: Arc<dyn NewsService>,
+
     source_url: Url,
     #[allow(dead_code)] // @ToDo: implement
     refresh_period: RefreshPeriod,
-
-    http_service: Arc<dyn HttpService>,
-    news_service: Arc<dyn NewsService>,
 }
 
 impl Atom {
@@ -52,10 +52,10 @@ impl Atom {
             .map_err(|e| format!("[source_url=\"{source_url}\"] {e} "))?;
 
         Ok(Self {
-            source_url,
-            refresh_period,
             http_service,
             news_service,
+            source_url,
+            refresh_period,
         })
     }
 }

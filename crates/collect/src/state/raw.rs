@@ -4,6 +4,8 @@ use crate::sources::telegram::TelegramChannel;
 
 use serde::Deserialize;
 use std::sync::Arc;
+use tokio::try_join;
+use tracing::debug;
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -38,18 +40,17 @@ pub struct RawTelegramChannel {
 
 pub fn from_atom_raw(
     list: Vec<RawAtom>,
-    app_state: Arc<dyn AppServices>,
+    app_state: Arc<AppServices>,
 ) -> Vec<impl Future<Output = Result<Atom, String>>> {
     list.into_iter()
         .map(move |x| {
             let app_state = app_state.clone();
             async move {
-                let news_service = app_state.news_service().await;
-                let Some(http_service) = app_state.http_service().await else {
-                    return Err(String::from(
-                        "[http_service] couldn't be init for [atom_sources]",
-                    ));
-                };
+                debug!("Initializing [atom_feed]: {0}", x.source_url);
+
+                let (http_service, news_service) =
+                    try_join!(app_state.http_service(), app_state.news_service())
+                        .map_err(|e| format!("Failed to get services: {e}"))?;
 
                 Atom::try_new(
                     &x.source_url,
@@ -66,6 +67,9 @@ pub fn from_telegram_channels_raw(
     list: Vec<RawTelegramChannel>,
 ) -> Vec<impl Future<Output = Result<TelegramChannel, String>>> {
     list.into_iter()
-        .map(|x| async move { TelegramChannel::try_new(&x.nickname) })
+        .map(|x| async move {
+            debug!("Initializing [telegram_channel]: {0}", x.nickname);
+            TelegramChannel::try_new(&x.nickname)
+        })
         .collect()
 }

@@ -3,6 +3,6 @@ use crate::state::AppState;
 
 use futures::future::join_all;
 
-pub async fn run_collectors(config: AppState) {
-    join_all(config.sources().map(Source::watch_updates)).await;
+pub async fn run_collectors(app_state: AppState) {
+    join_all(app_state.sources().map(Source::watch_updates)).await;
 }

@@ -6,39 +6,25 @@ use crate::sources::atom::Atom;
 use crate::sources::telegram::TelegramChannel;
 use crate::state::raw::{RawConfig, from_atom_raw, from_telegram_channels_raw};
 
-use async_trait::async_trait;
 use futures::future::try_join_all;
 use futures::try_join;
 use std::path::Path;
 use std::sync::Arc;
 use tokio::fs::read_to_string;
-use uninews_core::{HttpService, NewsService};
 
 pub struct AppState {
     atoms_channels: Vec<Atom>,
     telegram_channels: Vec<TelegramChannel>,
 }
 
-struct LiveAppServices;
-
-#[async_trait]
-impl AppServices for LiveAppServices {
-    async fn news_service(&self) -> &Arc<dyn NewsService> {
-        unimplemented!()
-    }
-
-    async fn http_service(&self) -> Option<&Arc<dyn HttpService>> {
-        None
-    }
-}
-
-impl LiveAppServices {
-    pub fn try_new() -> Arc<dyn AppServices> {
-        Arc::new(Self)
-    }
-}
-
 impl AppState {
+    pub const fn new(atoms_channels: Vec<Atom>, telegram_channels: Vec<TelegramChannel>) -> Self {
+        Self {
+            atoms_channels,
+            telegram_channels,
+        }
+    }
+
     /// Creates new `AppState` from raw config
     ///
     /// # Arguments
@@ -47,7 +33,7 @@ impl AppState {
     /// # Errors
     /// * When sources initialization fails with a detailed error message
     pub async fn try_from_raw(cfg_raw: RawConfig) -> Result<Self, Box<dyn std::error::Error>> {
-        let app_state: Arc<dyn AppServices> = LiveAppServices::try_new();
+        let app_state = Arc::new(AppServices::new());
 
         let sources = try_join!(
             try_join_all(from_atom_raw(cfg_raw.atoms_feeds, app_state)),
@@ -57,10 +43,7 @@ impl AppState {
         let (atoms_channels, telegram_channels) =
             sources.map_err(|e| format!("Failed to init sources: {e}"))?;
 
-        Ok(Self {
-            atoms_channels,
-            telegram_channels,
-        })
+        Ok(Self::new(atoms_channels, telegram_channels))
     }
 
     /// Creates a new `AppState` from a configuration file.
