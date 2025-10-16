@@ -1,12 +1,12 @@
 use async_trait::async_trait;
-use reqwest::Client;
+use reqwest::{Client, Response};
 use std::time::Duration;
 use tokio::time::sleep;
 use url::Url;
 
 #[async_trait]
 pub trait HttpService: Send + Sync {
-    async fn refresh_by_schedule(&self, url: Url) -> Result<String, String>;
+    async fn request_by_schedule(&self, url: Url) -> Result<Response, String>;
 }
 
 pub struct LiveHttpService {
@@ -15,16 +15,22 @@ pub struct LiveHttpService {
 
 impl LiveHttpService {
     #[must_use]
-    pub fn try_new() -> Self {
+    pub fn new() -> Self {
         Self {
             client: Client::new(),
         }
     }
 }
 
+impl Default for LiveHttpService {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[async_trait]
 impl HttpService for LiveHttpService {
-    async fn refresh_by_schedule(&self, url: Url) -> Result<String, String> {
+    async fn request_by_schedule(&self, url: Url) -> Result<Response, String> {
         sleep(Duration::from_secs(10)).await;
 
         let resp = self
@@ -33,8 +39,6 @@ impl HttpService for LiveHttpService {
             .send()
             .await
             .map_err(|e| e.to_string())?;
-
-        let resp = resp.text().await.map_err(|e| e.to_string())?;
 
         Ok(resp)
     }

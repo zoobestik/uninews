@@ -17,16 +17,14 @@ impl AppServices {
 
     pub async fn news_service(&self) -> Result<&Arc<dyn NewsService>, &'static str> {
         self.news_service
-            .get_or_try_init(async || {
-                Ok(Arc::new(LiveNewsService::try_new()) as Arc<dyn NewsService>)
-            })
+            .get_or_try_init(async || Ok(Arc::new(LiveNewsService::new()) as Arc<dyn NewsService>))
             .await
     }
 
     pub async fn http_service(&self) -> Result<&Arc<dyn HttpService>, &'static str> {
         self.http_service
             .get_or_try_init(|| async {
-                Ok(Arc::new(LiveHttpService::try_new()) as Arc<dyn HttpService>)
+                Ok(Arc::new(LiveHttpService::new()) as Arc<dyn HttpService>)
             })
             .await
     }

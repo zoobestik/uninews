@@ -2,6 +2,7 @@
 
 mod news;
 pub use news::LiveNewsService;
+pub use news::News;
 pub use news::NewsService;
 
 mod http;
