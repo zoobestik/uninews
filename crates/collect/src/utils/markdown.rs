@@ -3,24 +3,22 @@ use std::collections::HashSet;
 use std::sync::LazyLock;
 use tokio::task::spawn_blocking;
 
-static MARKDOWN_ALLOWED_TAGS: LazyLock<HashSet<&'static str>> =
-    LazyLock::new(|| HashSet::from(MARKDOWN_ALLOWED_TAGS_ARR));
-
-static MARKDOWN_ALLOWED_ATTRS: LazyLock<HashSet<&'static str>> =
-    LazyLock::new(|| HashSet::from(MARKDOWN_ALLOWED_ATTRS_ARR));
+static SANITIZER: LazyLock<Builder<'static>> = LazyLock::new(|| {
+    let mut sanitizer = Builder::new();
+    sanitizer
+        .tags(HashSet::from(MARKDOWN_ALLOWED_TAGS_ARR))
+        .generic_attributes(HashSet::from(MARKDOWN_ALLOWED_ATTRS_ARR))
+        .link_rel(Some("noopener noreferrer nofollow ugc"))
+        .strip_comments(true);
+    sanitizer
+});
 
 pub async fn html_to_markdown(html_dirty: String) -> Result<String, String> {
     spawn_blocking(move || -> Result<String, String> {
-        Ok(Builder::new()
-            .tags(MARKDOWN_ALLOWED_TAGS.clone())
-            .generic_attributes(MARKDOWN_ALLOWED_ATTRS.clone())
-            .link_rel(Some("noopener noreferrer nofollow ugc"))
-            .strip_comments(true)
-            .clean(&html_dirty)
-            .to_string())
+        Ok(SANITIZER.clean(&html_dirty).to_string())
     })
     .await
-    .unwrap()
+    .map_err(|e| format!("Failed to sanitize HTML in block: {e}"))?
 }
 
 const MARKDOWN_ALLOWED_ATTRS_ARR: [&str; 3] = ["href", "src", "alt"];

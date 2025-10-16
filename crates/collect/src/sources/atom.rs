@@ -32,7 +32,7 @@ pub struct Atom {
     news_service: Arc<dyn NewsService>,
 
     source_url: Url,
-    #[allow(dead_code)] // @ToDo: implement
+    #[allow(dead_code)] // @todo: implement
     refresh_period: RefreshPeriod,
 }
 
@@ -66,6 +66,7 @@ impl Atom {
         })
     }
 
+    // @todo: The method `generate_uuid_id` is using a shared namespace for generating UUIDs. This can lead to collisions if `link` or `guid` values overlap across feeds. Combine or add proper namespacing or consistent formatting to alleviate potential duplication risks.
     fn generate_uuid_id(&self, item: &Item) -> Result<Uuid, String> {
         let link = item
             .link
@@ -111,7 +112,7 @@ impl Atom {
                     image: None,
                     published_at: item.pub_date,
                 })
-            })
+            }) // @todo: In the `read_news_periodically` function, external HTTP requests are made, and there's comprehensive error handling. However, for better clarity and debugging, consider adding specific logging for response codes and context for external URL used (`self.source_url`) when the error occurs.
             .collect::<Vec<_>>();
 
         let list = try_join_all(news_futures).await?;
@@ -138,6 +139,7 @@ impl Atom {
             .await
             .map_err(|e| format!("Failed to get response text: {e}"))?;
 
+        // @todo: In the `watch_updates` function, there seems to be a potential issue with an infinite loop (`loop`) without any delay or condition. This can cause the service to block resources at high priority and lead to performance degradation. If the loop fails, it could also leave the application in an unstable state.
         let news = self
             .extract_news_channel(
                 Channel::read_from(Cursor::new(content))
