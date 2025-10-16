@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use tracing::info;
+use tracing::debug;
 use uuid::Uuid;
 
 #[derive(Debug)]
@@ -35,6 +35,6 @@ impl Default for LiveNewsService {
 #[async_trait]
 impl NewsService for LiveNewsService {
     async fn update_news(&self, content: Vec<News>) {
-        info!("[content=\"{content:?}\"]");
+        debug!("[content=\"{content:?}\"]");
     }
 }

@@ -7,7 +7,7 @@ use rss::{Channel, Item};
 use serde::Deserialize;
 use std::io::Cursor;
 use std::sync::Arc;
-use tracing::error;
+use tracing::{debug, error};
 use uninews_core::{HttpService, News, NewsService};
 use url::Url;
 use uuid::Uuid;
@@ -85,6 +85,12 @@ impl Atom {
     }
 
     async fn extract_news_channel(&self, channel: Channel) -> Result<Vec<News>, String> {
+        debug!(
+            "[atom_feed=\"{0}\"] Processing {1} items",
+            self.source_url,
+            channel.items.len()
+        );
+
         let news_futures = channel
             .items
             .into_iter()
@@ -109,11 +115,18 @@ impl Atom {
             .collect::<Vec<_>>();
 
         let list = try_join_all(news_futures).await?;
+        debug!(
+            "[atom_feed=\"{0}\"] Processed {1} news items",
+            self.source_url,
+            list.len()
+        );
 
         Ok(list)
     }
 
     async fn read_news_periodically(&self) -> Result<Vec<News>, String> {
+        debug!("[atom_feed=\"{0}\"] Fetching feed", self.source_url);
+
         let resp = self
             .http_service
             .request_by_schedule(self.source_url.clone())
@@ -141,7 +154,14 @@ impl Source for Atom {
     async fn watch_updates(&self) {
         loop {
             match self.read_news_periodically().await {
-                Ok(news) => self.news_service.update_news(news).await,
+                Ok(news) => {
+                    debug!(
+                        "[atom_feed=\"{0}\"] Updating {1} news items",
+                        self.source_url,
+                        news.len()
+                    );
+                    self.news_service.update_news(news).await;
+                }
                 Err(e) => error!("[atom_feed=\"{0}\"] {e}", self.source_url),
             }
         }
