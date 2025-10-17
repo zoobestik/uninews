@@ -20,9 +20,17 @@ pub async fn try_atom_from_raw(
     item: &RawAtom,
     app_state: Arc<AppServices>,
 ) -> Result<Atom, String> {
-    let (http_service, news_service) =
-        try_join!(app_state.http_service(), app_state.news_service())
-            .map_err(|e| format!("Failed to get services: {e}"))?;
+    let (http_service, news_service, storage_service) = try_join!(
+        app_state.http_service(),
+        app_state.news_service(),
+        app_state.storage_service()
+    )
+    .map_err(|e| format!("Failed to get services: {e}"))?;
 
-    Atom::try_new(&item.source_url, http_service, news_service)
+    Atom::try_new(
+        &item.source_url,
+        http_service,
+        news_service,
+        storage_service,
+    )
 }

@@ -10,12 +10,14 @@ use uninews_core::http::service::HttpService;
 use uninews_core::news::News;
 use uninews_core::news::service::NewsService;
 use uninews_core::source::Source;
+use uninews_core::storage::service::StorageService;
 use url::Url;
 use uuid::Uuid;
 
 pub struct Atom {
     http_service: Arc<dyn HttpService>,
     news_service: Arc<dyn NewsService>,
+    storage_service: Arc<dyn StorageService>,
 
     source_url: Url,
 }
@@ -32,6 +34,7 @@ impl Atom {
         source_url: &str,
         http_service: &Arc<dyn HttpService>,
         news_service: &Arc<dyn NewsService>,
+        storage_service: &Arc<dyn StorageService>,
     ) -> Result<Self, String> {
         let source_url = Self::validate_source_url(source_url)
             .map_err(|e| format!("[source_url=\"{source_url}\"] {e} "))?;
@@ -39,6 +42,8 @@ impl Atom {
         Ok(Self {
             http_service: http_service.clone(),
             news_service: news_service.clone(),
+            storage_service: storage_service.clone(),
+
             source_url,
         })
     }
@@ -93,10 +98,14 @@ impl Atom {
         // @todo: In the `watch_updates` function, there seems to be a potential issue with an infinite loop (`loop`) without any delay or condition. This can cause the service to block resources at high priority and lead to performance degradation. If the loop fails, it could also leave the application in an unstable state.
         let news = self
             .extract_news_channel(
-                Channel::read_from(Cursor::new(content))
+                Channel::read_from(Cursor::new(&content))
                     .map_err(|e| format!("Failed to parse feed content: {e}"))?,
             )
             .await?;
+
+        self.storage_service
+            .save_raw(self.source_id(), content.as_ref())
+            .await;
 
         Ok(news)
     }
@@ -124,7 +133,9 @@ impl Source for Atom {
                         self.source_url,
                         news.len()
                     );
+
                     let news_refs: Vec<&dyn News> = news.iter().map(AsRef::as_ref).collect();
+
                     self.news_service.update_news(news_refs).await;
                 }
                 Err(e) => error!("[atom_feed=\"{0}\"] {e}", self.source_url),

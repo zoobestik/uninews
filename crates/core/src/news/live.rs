@@ -27,7 +27,8 @@ impl NewsService for LiveNewsService {
         let fs_futures: Vec<_> = item
             .into_iter()
             .map(async move |news| -> Result<(), String> {
-                let path_string = format!("out/{1}/{0}.html", news.source_id(), news.parent_id());
+                let path_string =
+                    format!("out/news/{1}/{0}.html", news.source_id(), news.parent_id());
                 let path = Path::new(path_string.as_str());
 
                 fs::create_dir_all(
