@@ -8,6 +8,7 @@ set -euo pipefail
 if ! command -v taplo >/dev/null 2>&1; then
   echo "taplo is not installed; skipping taplo fmt" >&2
 else
+    echo "Running taplo fmt..."
     taplo fmt
 fi
 

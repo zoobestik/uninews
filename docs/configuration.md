@@ -1,34 +1,106 @@
 # Configuration
 
-## Configuration location and precedence
+## Overview
 
-1. If `UNINEWS_CONFIG_PATH` is set, its value is used.
-2. Otherwise, the program uses `./config.toml` relative to the current working directory.
+The application reads its configuration from a TOML file. You can specify a custom config file path using the `UNINEWS_CONFIG_PATH` environment variable, or the application will use `./config.toml` in the current working directory by default.
 
-## Minimal complete example
+## Quick Start
 
+Create a `config.toml` file:
 ```toml
 [[atom]]
-url = "https://example.com/feed.xml"
+source_url = "https://example.com/feed.xml"
 
 [[telegram]]
 nickname = "zoobestik"
 ```
+This minimal configuration defines one Atom/RSS feed and one Telegram channel.
 
-## TOML Properties
+## Configuration File Location
 
-### `[[atom]]`
+The application looks for configuration in this order:
 
-Each `[[atom]]` table describes an Atom/RSS feed entry.
+1. **Custom path**: If `UNINEWS_CONFIG_PATH` environment variable is set, use that file
+2. **Default path**: Otherwise, use `./config.toml` in the current working directory
 
-| Property | Type   | Required | Description                                                                 |
-|----------|--------|----------|-----------------------------------------------------------------------------|
-| `url`    | string | Yes      | Absolute URL of the feed. Must be a valid URL (parsed via the `url` crate). |
+**Note:** The application automatically loads variables from a `.env` file in the current directory if present.
 
-### `[[telegram]]`
+## Configuration Reference
 
-Each `[[telegram]]` table describes a Telegram source.
+> **Important:** The TOML config does not allow unknown fields. Misspelled or extra keys will cause an error.
 
-| Property   | Type   | Required | Description                                                                                         |
-|------------|--------|----------|-----------------------------------------------------------------------------------------------------|
-| `nickname` | string | Yes      | Channel/user nickname without `@`. The application constructs the URL as `https://t.me/<nickname>`. |
+### Atom/RSS Feeds: `[[atom]]`
+
+Define RSS or Atom feeds to monitor. You can add multiple `[[atom]]` sections.
+
+| Property     | Type   | Required | Description                                                 |
+|--------------|--------|----------|-------------------------------------------------------------|
+| `source_url` | string | **Yes**  | Full URL of the feed (e.g., `https://example.com/feed.xml`) |
+
+**Example:**
+```toml
+[[atom]]
+source_url = "https://blog.example.com/rss"
+
+[[atom]]
+source_url = "https://news.example.org/atom.xml"
+```
+
+### Telegram Channels: `[[telegram]]`
+
+Define Telegram channels to monitor. You can add multiple `[[telegram]]` sections.
+
+| Property   | Type   | Required | Description                                                                                                   |
+|------------|--------|----------|---------------------------------------------------------------------------------------------------------------|
+| `nickname` | string | **Yes**  | Channel or user nickname without the `@` symbol. Must be 5–32 characters (letters, numbers, underscores only) |
+
+The application constructs the Telegram URL as `https://t.me/<nickname>`.
+
+**Example:**
+```toml
+[[telegram]]
+nickname = "example_channel"
+
+[[telegram]]
+nickname = "another_news_source"
+```
+
+## Environment Variables
+
+### `UNINEWS_CONFIG_PATH`
+
+Optional. Specifies the path to your TOML configuration file.
+
+**Using a `.env` file** (recommended for local development):
+
+Create a `.env` file in your working directory:
+```bash
+UNINEWS_CONFIG_PATH=./custom_config.toml
+```
+**Using shell environment:**
+
+```bash
+# Set for the current session
+export UNINEWS_CONFIG_PATH=/absolute/path/to/config.toml
+cargo collect
+
+# Set for a single command
+UNINEWS_CONFIG_PATH=./config.toml cargo collect
+```
+## Complete Example
+
+```toml
+# Multiple Atom/RSS feeds
+[[atom]]
+source_url = "https://blog.rust-lang.org/feed.xml"
+
+[[atom]]
+source_url = "https://this-week-in-rust.org/rss.xml"
+
+# Multiple Telegram channels
+[[telegram]]
+nickname = "rust_news"
+
+[[telegram]]
+nickname = "programming_tips"
+```

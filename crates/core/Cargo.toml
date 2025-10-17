@@ -1,5 +1,5 @@
 [package]
-name = "uninews_collect"
+name = "uninews_core"
 
 authors.workspace = true
 description.workspace = true
@@ -10,22 +10,15 @@ publish.workspace = true
 repository.workspace = true
 version.workspace = true
 
-[[bin]]
-name = "collect"
-path = "src/main.rs"
+[lib]
+name = "uninews_core"
+path = "src/lib.rs"
 
 [dependencies]
-ammonia = { version = "^4.1.2" }
 async-trait.workspace = true
-dotenvy.workspace = true
 futures.workspace = true
-htmd = { version = "^0.3.2" }
-rss = { version = "^2.0.12" }
-serde.workspace = true
+reqwest.workspace = true
 tokio.workspace = true
-toml.workspace = true
 tracing.workspace = true
-tracing-subscriber.workspace = true
-uninews_core = { path = "../core" }
 url.workspace = true
 uuid.workspace = true

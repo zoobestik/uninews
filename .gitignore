@@ -8,6 +8,7 @@
 /.env
 /target
 /data
+/out
 
 *.DS_Store
 ._*
@@ -23,4 +24,4 @@ $RECYCLE.BIN/
 
 .Trash-*
 
-config.toml
+/config.toml
