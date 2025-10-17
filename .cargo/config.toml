@@ -1,0 +1,21 @@
+[build]
+incremental = true
+
+[alias]
+collect = "run --bin collect"
+manage = "run --bin manage"
+release = "build --release"
+
+[profile.release]
+codegen-units = 16
+debug = "line-tables-only"
+lto = "thin"
+opt-level = 3
+panic = "abort"
+strip = true
+
+[profile.profiling]
+debug = 2
+debug-assertions = false
+inherits = "release"
+strip = false

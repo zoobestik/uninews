@@ -11,7 +11,7 @@ repository.workspace = true
 version.workspace = true
 
 [[bin]]
-name = "uncol"
+name = "collect"
 path = "src/main.rs"
 
 [dependencies]
