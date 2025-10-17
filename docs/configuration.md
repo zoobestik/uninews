@@ -12,8 +12,6 @@ Note: If a `.env` file is present in the current working directory, it is loaded
 ```toml
 [[atom]]
 source_url = "https://example.com/feed.xml"
-# Optional. Default is 60 seconds. Format is an enum value:
-# refresh_period = { Seconds = 60 }
 
 [[telegram]]
 nickname = "zoobestik"
@@ -30,7 +28,6 @@ Each `[[atom]]` table describes an Atom/RSS feed entry.
 | Property         | Type   | Required | Description                                                                                                                                                                                                                                |
 |------------------|--------|----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `source_url`     | string | Yes      | Absolute URL of the feed. Must be a valid URL (parsed via the `url` crate).                                                                                                                                                                |
-| `refresh_period` | enum   | No       | How often to refresh the feed. Default: `Seconds = 60`.<br/> In TOML it must be specified as an inline table with the variant name, for example: `refresh_period = { Seconds = 120 }`. Currently, only the `Seconds` variant is supported. |
 
 ### `[[telegram]]`
 

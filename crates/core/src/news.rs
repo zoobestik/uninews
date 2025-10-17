@@ -1,40 +1,14 @@
+pub mod live;
+pub mod service;
+
 use async_trait::async_trait;
-use tracing::debug;
 use uuid::Uuid;
 
-#[derive(Debug)]
-pub struct News {
-    pub id: Uuid,
-    pub title: String,
-    pub content: String,
-    pub url: String,
-    pub image: Option<String>,
-    pub published_at: Option<String>,
-}
-
 #[async_trait]
-pub trait NewsService: Send + Sync {
-    async fn update_news(&self, new: Vec<News>);
-}
+pub trait News: Send + Sync {
+    fn source_id(&self) -> Uuid;
+    fn parent_id(&self) -> Uuid;
 
-pub struct LiveNewsService {}
-
-impl LiveNewsService {
-    #[must_use]
-    pub const fn new() -> Self {
-        Self {}
-    }
-}
-
-impl Default for LiveNewsService {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-#[async_trait]
-impl NewsService for LiveNewsService {
-    async fn update_news(&self, content: Vec<News>) {
-        debug!("[content=\"{content:?}\"]");
-    }
+    fn description(&self) -> &str;
+    fn content(&self) -> &Option<String>;
 }

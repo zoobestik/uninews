@@ -8,6 +8,7 @@
 /.env
 /target
 /data
+/out
 
 *.DS_Store
 ._*

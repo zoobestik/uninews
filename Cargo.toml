@@ -24,4 +24,4 @@ toml = { version = "^0.9.8" }
 tracing = { version = "^0.1.41" }
 tracing-subscriber = { version = "^0.3.20", features = ["env-filter", "json"] }
 url = { version = "^2.5.7", features = ["serde"] }
-uuid = { version = "^1.18.1", features = ["v5"] }
+uuid = { version = "^1.18.1", features = ["serde", "v5"] }

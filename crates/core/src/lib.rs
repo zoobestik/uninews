@@ -1,10 +1,6 @@
 #![warn(clippy::all, clippy::pedantic, clippy::nursery)]
 
-mod news;
-pub use news::LiveNewsService;
-pub use news::News;
-pub use news::NewsService;
-
-mod http;
-pub use http::HttpService;
-pub use http::LiveHttpService;
+pub mod http;
+pub mod news;
+pub mod source;
+pub mod utils;

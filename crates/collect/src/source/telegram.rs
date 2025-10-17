@@ -1,12 +1,15 @@
-use super::Source;
-
+use crate::source::SourceType;
 use async_trait::async_trait;
-use tracing::debug;
+use tracing::{debug, info};
+use uninews_core::source::Source;
+use uninews_core::utils::uuid::gen_consistent_uuid;
 use url::Url;
+use uuid::Uuid;
 
 #[derive(Debug)]
 pub struct TelegramChannel {
     channel_url: Url,
+    group_uuid: Uuid,
 }
 
 impl TelegramChannel {
@@ -63,13 +66,24 @@ impl TelegramChannel {
             "Invalid channel name."
         })?;
 
-        Ok(Self { channel_url })
+        Ok(Self {
+            channel_url,
+            group_uuid: Uuid::from_u128(0x0000_0000_0000_0000_0000_0000_0000_0000_0001),
+        })
     }
 }
 
 #[async_trait]
 impl Source for TelegramChannel {
+    fn source_id(&self) -> Uuid {
+        gen_consistent_uuid(&self.group_uuid, self.channel_url.as_str())
+    }
+
+    fn source_type(&self) -> String {
+        SourceType::TelegramChanel.to_string()
+    }
+
     async fn watch_updates(&self) {
-        println!("Running sources: {}", self.channel_url);
+        info!("Running source: {}", self.channel_url);
     }
 }

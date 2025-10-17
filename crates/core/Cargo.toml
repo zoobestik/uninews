@@ -16,6 +16,7 @@ path = "src/lib.rs"
 
 [dependencies]
 async-trait.workspace = true
+futures.workspace = true
 reqwest.workspace = true
 tokio.workspace = true
 tracing.workspace = true
