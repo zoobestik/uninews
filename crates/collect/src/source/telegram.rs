@@ -80,7 +80,7 @@ impl Source for TelegramChannel {
     }
 
     fn source_type(&self) -> String {
-        SourceType::TelegramChanel.to_string()
+        SourceType::TelegramChannel.to_string()
     }
 
     async fn watch_updates(&self) {

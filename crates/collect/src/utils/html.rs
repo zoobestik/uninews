@@ -54,7 +54,7 @@ pub async fn html_to_title(html_dirty: String) -> Result<String, String> {
 const TITLE_ALLOWED_TAGS_ARR: [&str; 7] = ["em", "strong", "b", "i", "sup", "sub", "strike"];
 
 const CONTENT_ALLOWED_ATTRS_ARR: [&str; 3] = ["href", "src", "alt"];
-const CONTENT_ALLOWED_TAGS_ARR: [&str; 46] = [
+const CONTENT_ALLOWED_TAGS_ARR: [&str; 45] = [
     "h1",
     "h2",
     "h3",
@@ -97,7 +97,6 @@ const CONTENT_ALLOWED_TAGS_ARR: [&str; 46] = [
     "big",
     "small",
     "tt",
-    "abbr",
     "time",
     "audio",
     "video",
