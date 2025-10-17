@@ -1,7 +1,7 @@
+use crate::configure::try_state_from_file;
 use crate::services::AppServices;
 use crate::source::atom::Atom;
 use crate::source::telegram::TelegramChannel;
-use crate::state_config::try_state_from_file;
 use std::path::Path;
 use std::sync::Arc;
 use uninews_core::source::Source;
@@ -23,8 +23,8 @@ impl AppState {
         config_path: &Path,
         app_services: Arc<AppServices>,
     ) -> Result<Self, String> {
-        let cfg_raw = try_state_from_file(config_path, app_services).await?;
-        Ok(Self::new(cfg_raw.0, cfg_raw.1))
+        let config = try_state_from_file(config_path, app_services).await?;
+        Ok(config)
     }
 
     pub fn sources(&self) -> impl Iterator<Item = &dyn Source> {

@@ -1,7 +1,6 @@
 use super::{RawAtom, RawTelegramChannel, try_atom_from_raw, try_telegram_channel_from_raw};
 use crate::services::AppServices;
-use crate::source::atom::Atom;
-use crate::source::telegram::TelegramChannel;
+use crate::state::AppState;
 use futures::future::try_join_all;
 use serde::Deserialize;
 use std::path::Path;
@@ -22,12 +21,10 @@ pub struct RawConfig {
     telegram_channels: Vec<RawTelegramChannel>,
 }
 
-pub type AppStateDraft = (Vec<Atom>, Vec<TelegramChannel>);
-
-pub async fn try_new_draft(
+pub async fn try_state_from_draft(
     config: RawConfig,
     services: Arc<AppServices>,
-) -> Result<AppStateDraft, String> {
+) -> Result<AppState, String> {
     let atom_features: Vec<_> = config
         .atoms_feeds
         .iter()
@@ -52,13 +49,13 @@ pub async fn try_new_draft(
         })
         .collect();
 
-    let state = try_join!(
+    let (atom_feeds, telegram_channel) = try_join!(
         try_join_all(atom_features),
         try_join_all(telegram_channels_features),
     )
     .map_err(|e| format!("Failed to init source: {e}"))?;
 
-    Ok(state)
+    Ok(AppState::new(atom_feeds, telegram_channel))
 }
 
 /// Creates a new `AppState` from a configuration file.
@@ -73,7 +70,7 @@ pub async fn try_new_draft(
 pub async fn try_state_from_file(
     config_path: &Path,
     services: Arc<AppServices>,
-) -> Result<AppStateDraft, String> {
+) -> Result<AppState, String> {
     let file_content = read_to_string(config_path)
         .await
         .map_err(|e| format!("Failed to read file '{}': {}", config_path.display(), e))?;
@@ -81,5 +78,5 @@ pub async fn try_state_from_file(
     let config: RawConfig =
         toml::from_str(&file_content).map_err(|e| format!("Failed to parse TOML: {e}"))?;
 
-    try_new_draft(config, services).await
+    try_state_from_draft(config, services).await
 }
