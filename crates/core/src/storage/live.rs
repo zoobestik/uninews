@@ -1,7 +1,6 @@
 use super::service::StorageService;
+use crate::utils::fs::write_to_file;
 use async_trait::async_trait;
-use std::path::Path;
-use tokio::fs;
 use tracing::error;
 use uuid::Uuid;
 
@@ -15,20 +14,7 @@ impl LiveStorageService {
 
     async fn save(&self, key: &str, value: &str) -> Result<(), String> {
         let path_string = format!("out/cache/{key}.html");
-        let path = Path::new(path_string.as_str());
-
-        fs::create_dir_all(
-            path.parent()
-                .ok_or_else(|| format!("Failed to get parent {0}", path.display()))?,
-        )
-        .await
-        .map_err(|e| format!("Failed to create directory {0}: {e}", path.display()))?;
-
-        fs::write(path, value)
-            .await
-            .map_err(|e| format!("Failed to write file [{0}]: {e}", path.display()))?;
-
-        Ok(())
+        write_to_file(path_string.as_str(), value).await
     }
 }
 

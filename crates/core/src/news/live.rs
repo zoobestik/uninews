@@ -1,9 +1,9 @@
 use super::News;
 use super::service::NewsService;
+use crate::utils::fs::write_to_file;
 use async_trait::async_trait;
 use futures::future::try_join_all;
-use std::path::Path;
-use tokio::fs;
+use tokio::try_join;
 use tracing::error;
 
 pub struct LiveNewsService {}
@@ -27,20 +27,29 @@ impl NewsService for LiveNewsService {
         let fs_futures: Vec<_> = item
             .into_iter()
             .map(async move |news| -> Result<(), String> {
-                let path_string =
-                    format!("out/news/{1}/{0}.html", news.source_id(), news.parent_id());
-                let path = Path::new(path_string.as_str());
+                let short_path = format!(
+                    "out/news/{1}/{0}.short.md",
+                    news.source_id(),
+                    news.parent_id()
+                );
+                let short_text = format!("# {1}\n\n{0}", news.description(), news.title());
 
-                fs::create_dir_all(
-                    path.parent()
-                        .ok_or_else(|| format!("Failed to get parent {0}", path.display()))?,
+                let long_path = format!(
+                    "out/news/{1}/{0}.long.md",
+                    news.source_id(),
+                    news.parent_id()
+                );
+                let long_text = format!(
+                    "# {1}\n\n{0}",
+                    news.content().as_ref().unwrap_or(&String::new()),
+                    news.title()
+                );
+
+                try_join!(
+                    write_to_file(short_path.as_str(), short_text.as_str()),
+                    write_to_file(long_path.as_str(), long_text.as_str()),
                 )
-                .await
-                .map_err(|e| format!("Failed to create directory {0}: {e}", path.display()))?;
-
-                fs::write(path, news.description())
-                    .await
-                    .map_err(|e| format!("Failed to write file [{0}]: {e}", path.display()))?;
+                .map_err(|e| format!("Failed to update news: {e}"))?;
 
                 Ok(())
             })

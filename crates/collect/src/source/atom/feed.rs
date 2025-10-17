@@ -1,4 +1,4 @@
-use super::item::AtomItem;
+use super::item::try_atom_news_from_rss_item;
 use crate::source::SourceType;
 use async_trait::async_trait;
 use futures::future::try_join_all;
@@ -68,7 +68,7 @@ impl Atom {
             //  consider adding specific logging for response codes and context for external URL
             //  used (`self.source_url`) when the error occurs.
             .map(async |item| -> Result<Arc<dyn News>, String> {
-                let news_item = AtomItem::try_new(self.source_id(), item).await?;
+                let news_item = try_atom_news_from_rss_item(self.source_id(), item).await?;
                 Ok(Arc::new(news_item) as Arc<dyn News>)
             })
             .collect();

@@ -1,5 +1,6 @@
-use crate::utils::html::html_sanitize;
+use crate::utils::html::{html_to_content, html_to_title};
 use async_trait::async_trait;
+use futures::try_join;
 use rss::Item;
 use serde::{Deserialize, Serialize};
 use uninews_core::news::News;
@@ -23,44 +24,48 @@ pub struct AtomItem {
     content: Option<String>,
 }
 
-impl AtomItem {
-    pub async fn try_new(parent_id: Uuid, item: Item) -> Result<Self, String> {
-        let link = item
-            .link
-            .clone()
-            .ok_or_else(|| "Missing link for one element".to_string())?;
+pub async fn try_atom_news_from_rss_item(parent_id: Uuid, item: Item) -> Result<AtomItem, String> {
+    let link = item
+        .link
+        .clone()
+        .ok_or_else(|| "Missing link for one element".to_string())?;
 
-        let guid = item
-            .guid
-            .clone()
-            .ok_or_else(|| format!("Missing guid for {link}"))?
-            .value;
+    let guid = item
+        .guid
+        .clone()
+        .ok_or_else(|| format!("Missing guid for {link}"))?
+        .value;
 
-        let source_id = gen_consistent_uuid(&parent_id, format!("{link}-{guid}").as_str());
+    let source_id = gen_consistent_uuid(&parent_id, format!("{link}-{guid}").as_str());
 
-        let description = item
-            .description
-            .ok_or_else(|| format!("Parsing error for {source_id}"))?;
+    let (title, description, content) = try_join!(
+        html_to_title(item.title.unwrap_or_default()),
+        html_to_content(
+            item.description
+                .ok_or_else(|| format!("Parsing error for {source_id}"))?,
+        ),
+        html_to_content(item.content.unwrap_or_default()),
+    )
+    .map_err(|e| format!("Sanitize error for {source_id}: {e}"))?;
 
-        let description = html_sanitize(description)
-            .await
-            .map_err(|e| format!("Sanitize error for {source_id}: {e}"))?;
+    Ok(AtomItem {
+        parent_id,
+        source_id,
 
-        Ok(Self {
-            parent_id,
-            source_id,
+        guid,
+        link,
 
-            guid,
-            link,
+        title,
+        description,
+        image: None,
+        published_at: item.pub_date,
 
-            title: item.title.unwrap_or_default(),
-            image: None,
-            description,
-            published_at: item.pub_date,
-
-            content: item.content,
-        })
-    }
+        content: if content.trim().is_empty() {
+            None
+        } else {
+            Some(content)
+        },
+    })
 }
 
 #[async_trait]
@@ -71,6 +76,10 @@ impl News for AtomItem {
 
     fn parent_id(&self) -> Uuid {
         self.parent_id
+    }
+
+    fn title(&self) -> &str {
+        &self.title
     }
 
     fn description(&self) -> &str {
