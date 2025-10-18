@@ -4,7 +4,7 @@ use crate::source::atom::Atom;
 use crate::source::telegram::TelegramChannel;
 use std::path::Path;
 use std::sync::Arc;
-use uninews_core::source::Source;
+use uninews_core::models::Source;
 
 pub struct AppState {
     atoms_channels: Vec<Atom>,

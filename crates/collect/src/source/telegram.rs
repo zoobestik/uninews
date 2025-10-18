@@ -1,8 +1,8 @@
 use crate::source::SourceType;
 use async_trait::async_trait;
 use tracing::{debug, info};
-use uninews_core::source::Source;
-use uninews_core::utils::uuid::gen_consistent_uuid;
+use uninews_core::models::Source;
+use uninews_core::uuid::gen_consistent_uuid;
 use url::Url;
 use uuid::Uuid;
 

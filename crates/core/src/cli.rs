@@ -1,4 +1,7 @@
+use dotenvy::dotenv;
+use std::process;
 use tracing::dispatcher::SetGlobalDefaultError;
+use tracing::{debug, error};
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
 /// Initialize tracing subscriber with environment filters.
@@ -20,4 +23,15 @@ pub fn init_logger() -> Result<(), SetGlobalDefaultError> {
         .finish();
 
     tracing::subscriber::set_global_default(subscriber)
+}
+
+pub fn init_cli() {
+    if let Err(e) = init_logger() {
+        error!("Failed to initialize logger: {e}");
+        process::exit(1);
+    }
+
+    dotenv().ok();
+
+    debug!("[init_cli]: prepared");
 }

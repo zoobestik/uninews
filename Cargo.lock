@@ -725,9 +725,9 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "2.11.4"
+version = "2.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b0f83760fb341a774ed326568e19f5a863af4a952def8c39f9ab92fd95b88e5"
+checksum = "6717a8d2a5a929a1a2eb43a12812498ed141a0bcfb7e8f7844fbdbe4303bba9f"
 dependencies = [
  "equivalent",
  "hashbrown",
@@ -1816,7 +1816,6 @@ version = "1.0.0-alpha.1"
 dependencies = [
  "ammonia",
  "async-trait",
- "dotenvy",
  "futures",
  "htmd",
  "rss",
@@ -1824,7 +1823,6 @@ dependencies = [
  "tokio",
  "toml",
  "tracing",
- "tracing-subscriber",
  "uninews_core",
  "url",
  "uuid",
@@ -1835,10 +1833,12 @@ name = "uninews_core"
 version = "1.0.0-alpha.1"
 dependencies = [
  "async-trait",
+ "dotenvy",
  "futures",
  "reqwest",
  "tokio",
  "tracing",
+ "tracing-subscriber",
  "url",
  "uuid",
 ]
@@ -1846,6 +1846,11 @@ dependencies = [
 [[package]]
 name = "uninews_manage"
 version = "1.0.0-alpha.1"
+dependencies = [
+ "tokio",
+ "tracing",
+ "uninews_core",
+]
 
 [[package]]
 name = "untrusted"

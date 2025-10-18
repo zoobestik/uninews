@@ -1,6 +1,6 @@
 use super::News;
 use super::service::NewsService;
-use crate::utils::fs::write_to_file;
+use crate::fs::write_to_file;
 use async_trait::async_trait;
 use futures::future::try_join_all;
 use tokio::try_join;

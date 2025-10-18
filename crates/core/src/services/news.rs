@@ -1,5 +1,8 @@
-pub mod live;
-pub mod service;
+mod live;
+pub use live::*;
+
+mod service;
+pub use service::*;
 
 use async_trait::async_trait;
 use uuid::Uuid;

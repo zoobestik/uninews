@@ -6,11 +6,10 @@ use rss::Channel;
 use std::io::Cursor;
 use std::sync::Arc;
 use tracing::{debug, error, info};
-use uninews_core::http::service::HttpService;
-use uninews_core::news::News;
-use uninews_core::news::service::NewsService;
-use uninews_core::source::Source;
-use uninews_core::storage::service::StorageService;
+use uninews_core::models::Source;
+use uninews_core::services::http::HttpService;
+use uninews_core::services::news::{News, NewsService};
+use uninews_core::services::storage::StorageService;
 use url::Url;
 use uuid::Uuid;
 

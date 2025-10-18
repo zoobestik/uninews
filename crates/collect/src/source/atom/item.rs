@@ -3,8 +3,8 @@ use async_trait::async_trait;
 use futures::try_join;
 use rss::Item;
 use serde::{Deserialize, Serialize};
-use uninews_core::news::News;
-use uninews_core::utils::uuid::gen_consistent_uuid;
+use uninews_core::services::news::News;
+use uninews_core::uuid::gen_consistent_uuid;
 use url::Url;
 use uuid::Uuid;
 

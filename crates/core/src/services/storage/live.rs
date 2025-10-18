@@ -1,5 +1,5 @@
 use super::service::StorageService;
-use crate::utils::fs::write_to_file;
+use crate::fs::write_to_file;
 use async_trait::async_trait;
 use tracing::error;
 use uuid::Uuid;

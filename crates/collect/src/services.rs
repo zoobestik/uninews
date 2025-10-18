@@ -1,11 +1,8 @@
 use std::sync::Arc;
 use tokio::sync::OnceCell;
-use uninews_core::http::live::LiveHttpService;
-use uninews_core::http::service::HttpService;
-use uninews_core::news::live::LiveNewsService;
-use uninews_core::news::service::NewsService;
-use uninews_core::storage::live::LiveStorageService;
-use uninews_core::storage::service::StorageService;
+use uninews_core::services::http::{HttpService, LiveHttpService};
+use uninews_core::services::news::{LiveNewsService, NewsService};
+use uninews_core::services::storage::{LiveStorageService, StorageService};
 
 pub struct AppServices {
     news: OnceCell<Arc<dyn NewsService>>,

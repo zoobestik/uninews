@@ -1,24 +1,16 @@
-mod logger;
 mod runners;
 
-use logger::init_logger;
-use runners::run_collectors;
-
-use crate::state::AppState;
-
 use crate::services::AppServices;
+use crate::state::AppState;
+use runners::run_collectors;
 use std::path::Path;
 use std::sync::Arc;
 use std::{env, process};
 use tracing::error;
+use uninews_core::cli::init_cli;
 
 pub async fn run() {
-    if let Err(e) = init_logger() {
-        error!("Failed to initialize logger: {e}");
-        process::exit(1);
-    }
-
-    dotenvy::dotenv().ok();
+    init_cli();
 
     let config_path =
         env::var("UNINEWS_CONFIG_PATH").unwrap_or_else(|_| "./config.toml".to_string());
