@@ -1943,6 +1943,7 @@ version = "1.0.0-alpha.1"
 dependencies = [
  "ammonia",
  "async-trait",
+ "clap",
  "futures",
  "htmd",
  "rss",

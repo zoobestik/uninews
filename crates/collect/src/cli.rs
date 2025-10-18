@@ -2,13 +2,28 @@ mod runners;
 
 use crate::services::AppServices;
 use crate::state::AppState;
+use clap::Parser;
 use runners::run_collectors;
 use std::path::Path;
 use std::sync::Arc;
 use std::{env, process};
 use tracing::error;
 
-pub async fn run_collect() {
+#[derive(Parser, Debug)]
+#[command(
+    about = "Collect and aggregate content from configured information sources",
+    visible_aliases = ["col"],
+)]
+pub struct CollectCommand {
+    #[clap(
+        short,
+        long,
+        help = "Watch configured sources for content updates continuously"
+    )]
+    watch: bool, // @todo: implement continuous watching mode that runs source update checks periodically instead of one-time collection
+}
+
+pub async fn run_collect(_cmd: CollectCommand) {
     let config_path =
         env::var("UNINEWS_CONFIG_PATH").unwrap_or_else(|_| "./config.toml".to_string());
 
