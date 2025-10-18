@@ -7,11 +7,8 @@ use std::path::Path;
 use std::sync::Arc;
 use std::{env, process};
 use tracing::error;
-use uninews_core::cli::init_cli;
 
-pub async fn run() {
-    init_cli();
-
+pub async fn run_collect() {
     let config_path =
         env::var("UNINEWS_CONFIG_PATH").unwrap_or_else(|_| "./config.toml".to_string());
 

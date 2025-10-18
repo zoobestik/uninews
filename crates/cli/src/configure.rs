@@ -25,7 +25,7 @@ pub fn init_logger() -> Result<(), SetGlobalDefaultError> {
     tracing::subscriber::set_global_default(subscriber)
 }
 
-pub fn init_cli() {
+pub fn configure() {
     if let Err(e) = init_logger() {
         error!("Failed to initialize logger: {e}");
         process::exit(1);

@@ -1,8 +1,19 @@
+use clap::{Parser, Subcommand};
 use tracing::debug;
-use uninews_core::cli::init_cli;
 
-pub async fn run() {
-    init_cli();
+#[derive(Parser, Debug)]
+pub struct ManageCommand {
+    #[command(subcommand)]
+    command: ManageCommands,
+}
 
-    debug!("[cli_app]: done");
+#[derive(Subcommand, Debug)]
+pub enum ManageCommands {
+    Init,
+}
+
+pub async fn run_manage(cmd: ManageCommand) {
+    match cmd.command {
+        ManageCommands::Init => debug!("[run_manage]: <Init> done"),
+    };
 }

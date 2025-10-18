@@ -2,8 +2,8 @@
 incremental = true
 
 [alias]
-collect = "run --bin collect"
-manage = "run --bin manage"
+collect = "run -- collect"
+manage = "run -- manage"
 release = "build --release"
 
 [profile.release]
