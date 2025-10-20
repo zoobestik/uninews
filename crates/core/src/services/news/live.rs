@@ -46,8 +46,8 @@ impl NewsService for LiveNewsService {
                 );
 
                 try_join!(
-                    write_to_file(short_path.as_str(), short_text.as_str()),
-                    write_to_file(long_path.as_str(), long_text.as_str()),
+                    write_to_file(&short_path, &short_text),
+                    write_to_file(&long_path, &long_text),
                 )
                 .map_err(|e| format!("Failed to update news: {e}"))?;
 

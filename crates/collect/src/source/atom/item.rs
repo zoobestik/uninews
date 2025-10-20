@@ -36,7 +36,7 @@ pub async fn try_atom_news_from_rss_item(parent_id: Uuid, item: Item) -> Result<
         .ok_or_else(|| format!("Missing guid for {link}"))?
         .value;
 
-    let source_id = gen_consistent_uuid(&parent_id, format!("{link}-{guid}").as_str());
+    let source_id = gen_consistent_uuid(&parent_id, &format!("{link}-{guid}"));
 
     let (title, description, content) = try_join!(
         html_to_title(item.title.unwrap_or_default()),

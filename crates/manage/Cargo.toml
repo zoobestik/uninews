@@ -12,4 +12,7 @@ version.workspace = true
 
 [dependencies]
 clap.workspace = true
+sqlx.workspace = true
+tokio.workspace = true
 tracing.workspace = true
+uninews_core = { path = "../core" }

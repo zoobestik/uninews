@@ -14,16 +14,35 @@ use tokio::fs;
 pub async fn write_to_file(path_string: &str, content: &str) -> Result<(), String> {
     let path = Path::new(path_string);
 
-    fs::create_dir_all(
-        path.parent()
-            .ok_or_else(|| format!("Failed to get parent {0}", path.display()))?,
-    )
-    .await
-    .map_err(|e| format!("Failed to create directory {0}: {e}", path.display()))?;
+    create_parent_dirs(path).await?;
 
     fs::write(path, content)
         .await
         .map_err(|e| format!("Failed to write file [{0}]: {e}", path.display()))?;
 
     Ok(())
+}
+
+/// Asynchronously creates parent directories for a given path.
+///
+/// # Arguments
+/// * `path` - The path for which to create parent directories
+///
+/// # Returns
+/// The parent path if successful
+///
+/// # Errors
+/// This function will return an error if:
+/// * The parent directory cannot be determined
+/// * Directory creation fails
+pub async fn create_parent_dirs(path: &Path) -> Result<&Path, String> {
+    let parent = path
+        .parent()
+        .ok_or_else(|| format!("Failed to get parent {0}", path.display()))?;
+
+    fs::create_dir_all(parent)
+        .await
+        .map_err(|e| format!("Failed to create directory {0}: {e}", path.display()))?;
+
+    Ok(parent)
 }

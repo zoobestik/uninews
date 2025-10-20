@@ -14,7 +14,7 @@ impl LiveStorageService {
 
     async fn save(&self, key: &str, value: &str) -> Result<(), String> {
         let path_string = format!("out/cache/{key}.html");
-        write_to_file(path_string.as_str(), value).await
+        write_to_file(&path_string, value).await
     }
 }
 
