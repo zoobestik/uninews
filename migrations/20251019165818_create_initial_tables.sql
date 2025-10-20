@@ -23,8 +23,7 @@ CREATE INDEX IF NOT EXISTS idx_external_id ON uuid_mappings (external_id);
 CREATE TABLE IF NOT EXISTS sources
 (
     id         BLOB PRIMARY KEY NOT NULL, -- UUIDv7
-    source_id  BLOB             NOT NULL, -- UUIDv5
-    source     TEXT             NOT NULL CHECK (source IN ('rss', 'telegram')),
+    source     TEXT             NOT NULL CHECK (source IN ('atom', 'telegram')),
     created_at TEXT             NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
@@ -33,12 +32,10 @@ CREATE TABLE IF NOT EXISTS articles
 (
     id         BLOB PRIMARY KEY NOT NULL, -- UUIDv7
     parent_id  BLOB             NOT NULL, -- UUIDv7
-    source_id  BLOB             NOT NULL, -- UUIDv5
     created_at TEXT             NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
     updated_at TEXT             NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
     -- key
-    FOREIGN KEY (source_id) REFERENCES uuid_mappings (external_id)
+    FOREIGN KEY (parent_id) REFERENCES sources (id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_articles_source_id ON articles (source_id);
 CREATE INDEX IF NOT EXISTS idx_articles_parent_id ON articles (parent_id);

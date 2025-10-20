@@ -1,9 +1,11 @@
 pub mod atom;
+pub mod telegram;
 
 use crate::models::atom::AtomSource;
+use crate::models::source::telegram::TelegramChannelSource;
 use async_trait::async_trait;
+use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
-use std::fmt::Display;
 use uuid::Uuid;
 
 #[async_trait]
@@ -17,16 +19,13 @@ pub trait Source: Send + Sync {
 #[derive(Debug, Deserialize, Serialize)]
 pub enum SourceType {
     Atom(AtomSource),
+    TelegramChannel(TelegramChannelSource),
 }
 
-impl Display for SourceType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Self::Atom(_) => "atom".to_string(),
-            }
-        )
-    }
+#[derive(Debug, Deserialize, Serialize, sqlx::Type, Clone, ValueEnum)]
+#[serde(rename_all = "lowercase")]
+#[sqlx(rename_all = "lowercase")]
+pub enum SourceTypeValue {
+    Atom,
+    TelegramChannel,
 }

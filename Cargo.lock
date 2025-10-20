@@ -2766,11 +2766,13 @@ version = "1.0.0-alpha.1"
 dependencies = [
  "clap",
  "dotenvy",
+ "sqlx",
  "tokio",
  "tracing",
  "tracing-subscriber",
  "uninews_collect",
- "uninews_manage",
+ "uninews_core",
+ "url",
 ]
 
 [[package]]
@@ -2798,6 +2800,7 @@ version = "1.0.0-alpha.1"
 dependencies = [
  "async-trait",
  "chrono",
+ "clap",
  "futures",
  "reqwest",
  "serde",
@@ -2806,17 +2809,6 @@ dependencies = [
  "tracing",
  "url",
  "uuid",
-]
-
-[[package]]
-name = "uninews_manage"
-version = "1.0.0-alpha.1"
-dependencies = [
- "clap",
- "sqlx",
- "tokio",
- "tracing",
- "uninews_core",
 ]
 
 [[package]]

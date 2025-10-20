@@ -17,6 +17,7 @@ path = "src/lib.rs"
 [dependencies]
 async-trait.workspace = true
 chrono.workspace = true
+clap.workspace = true
 futures.workspace = true
 reqwest.workspace = true
 serde = { version = "1.0.228", features = ["derive"] }

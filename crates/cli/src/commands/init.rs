@@ -1,30 +1,16 @@
-use clap::{Args, Parser, Subcommand};
+use clap::Parser;
 use sqlx::{migrate, sqlite};
-use std::env;
-use std::io::{self, Write};
+use std::error::Error;
+use std::io::Write;
 use std::path::Path;
+use std::{env, io};
 use tokio::fs;
 use tracing::info;
 use uninews_core::fs::create_parent_dirs;
 
 #[derive(Parser, Debug)]
-#[command(
-    about = "Administrative CLI tool for managing users, content feeds and system configuration",
-    visible_alias = "adm"
-)]
-pub struct ManageCommand {
-    #[command(subcommand)]
-    command: ManageCommands,
-}
-
-#[derive(Subcommand, Debug)]
-pub enum ManageCommands {
-    #[clap(about = "Initialize a new application instance")]
-    Init(InitArgs),
-}
-
-#[derive(Args, Debug)]
-pub struct InitArgs {
+#[command(about = "Initialize application database and create required directories")]
+pub struct InitCommand {
     #[clap(
         short,
         long,
@@ -33,17 +19,7 @@ pub struct InitArgs {
     force: bool,
 }
 
-pub async fn run_manage(cmd: ManageCommand) {
-    match cmd.command {
-        ManageCommands::Init(args) => {
-            if let Err(e) = init_database(args).await {
-                eprintln!("Error initializing database: {}", e);
-            }
-        }
-    };
-}
-
-async fn init_database(args: InitArgs) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn init_app(args: InitCommand) -> Result<(), Box<dyn Error>> {
     let db_path = env::var("UNINEWS_DB_PATH").unwrap_or("data/app.sqlite".to_string());
     let db_file = Path::new(&db_path);
     let db_file_exists = fs::try_exists(db_file).await.unwrap_or(false);

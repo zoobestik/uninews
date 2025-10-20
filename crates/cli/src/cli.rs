@@ -1,10 +1,8 @@
-use crate::command::Commands;
+use crate::commands::{Commands, run_commands};
 use crate::configure::configure;
 use clap::Parser;
 use clap::builder::styling;
 use clap::builder::styling::{AnsiColor, Effects};
-use uninews_collect::cli::run_collect;
-use uninews_manage::cli::run_manage;
 
 const STYLES: styling::Styles = styling::Styles::styled()
     .header(AnsiColor::Green.on_default().effects(Effects::BOLD))
@@ -28,9 +26,5 @@ pub struct Cli {
 
 pub async fn run() {
     configure();
-
-    match Cli::parse().command {
-        Commands::Collect(cmd) => run_collect(cmd).await,
-        Commands::Manage(cmd) => run_manage(cmd).await,
-    }
+    run_commands(Cli::parse().command).await;
 }

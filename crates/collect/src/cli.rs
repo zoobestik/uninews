@@ -4,10 +4,9 @@ use crate::services::AppServices;
 use crate::state::AppState;
 use clap::Parser;
 use runners::run_collectors;
+use std::env;
 use std::path::Path;
 use std::sync::Arc;
-use std::{env, process};
-use tracing::error;
 
 #[derive(Parser, Debug)]
 #[command(
@@ -23,19 +22,21 @@ pub struct CollectCommand {
     watch: bool, // @todo: implement continuous watching mode that runs source update checks periodically instead of one-time collection
 }
 
-pub async fn run_collect(_cmd: CollectCommand) {
+/// Main function for content collection command execution
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - a Config file cannot be read or parsed
+/// - Application state cannot be initialized with the given config
+pub async fn run_collect(_cmd: CollectCommand) -> Result<(), String> {
     let config_path =
         env::var("UNINEWS_CONFIG_PATH").unwrap_or_else(|_| "./config.toml".to_string());
 
     let app_state =
-        AppState::try_from_file(Path::new(&config_path), Arc::new(AppServices::new())).await;
+        AppState::try_from_file(Path::new(&config_path), Arc::new(AppServices::new())).await?;
 
-    run_collectors(match app_state {
-        Ok(cfg) => cfg,
-        Err(e) => {
-            error!("'{config_path}': {e}");
-            process::exit(1);
-        }
-    })
-    .await;
+    run_collectors(app_state).await;
+
+    Ok(())
 }

@@ -1,3 +1,3 @@
 pub mod cli;
-mod command;
+mod commands;
 mod configure;
