@@ -10,13 +10,16 @@ pub struct AtomSource {
     pub id: Uuid,
     pub source: SourceTypeValue,
     pub created_at: DateTime<Utc>,
+
+    pub url: Url,
 }
 
 impl AtomSource {
     #[must_use]
-    pub const fn new(id: Uuid, created_at: DateTime<Utc>) -> Self {
+    pub const fn new(id: Uuid, created_at: DateTime<Utc>, url: Url) -> Self {
         Self {
             id,
+            url,
             source: SourceTypeValue::Atom,
             created_at,
         }

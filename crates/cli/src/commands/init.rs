@@ -1,12 +1,11 @@
 use clap::Parser;
-use sqlx::{migrate, sqlite};
+use sqlx::{SqlitePool, migrate};
 use std::error::Error;
+use std::io;
 use std::io::Write;
-use std::path::Path;
-use std::{env, io};
 use tokio::fs;
 use tracing::info;
-use uninews_core::fs::create_parent_dirs;
+use uninews_core::fs::{create_parent_dirs, get_db_path, to_db_uri};
 
 #[derive(Parser, Debug)]
 #[command(about = "Initialize application database and create required directories")]
@@ -20,8 +19,9 @@ pub struct InitCommand {
 }
 
 pub async fn init_app(args: InitCommand) -> Result<(), Box<dyn Error>> {
-    let db_path = env::var("UNINEWS_DB_PATH").unwrap_or("data/app.sqlite".to_string());
-    let db_file = Path::new(&db_path);
+    let db_path = get_db_path()?;
+    let db_file = db_path.as_path();
+
     let db_file_exists = fs::try_exists(db_file).await.unwrap_or(false);
 
     if db_file_exists && !args.force {
@@ -44,8 +44,8 @@ pub async fn init_app(args: InitCommand) -> Result<(), Box<dyn Error>> {
 
     create_parent_dirs(db_file).await?;
 
-    let db_uri = format!("sqlite:{0}?mode=rwc", db_file.display());
-    let db = sqlite::SqlitePool::connect(&db_uri).await?;
+    let db_uri = to_db_uri(db_file);
+    let db = SqlitePool::connect(&db_uri).await?;
 
     migrate!("../../migrations")
         .run(&db)

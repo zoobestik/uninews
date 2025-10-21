@@ -27,6 +27,15 @@ CREATE TABLE IF NOT EXISTS sources
     created_at TEXT             NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
+-- Create a table for atom-feed additional data
+CREATE TABLE IF NOT EXISTS source_atom_details
+(
+    atom_details_id  BLOB PRIMARY KEY NOT NULL, -- UUIDv7
+    url              TEXT             NOT NULL,
+
+    CONSTRAINT fk_sources_id FOREIGN KEY (atom_details_id) REFERENCES sources (id)
+);
+
 -- Create an article table
 CREATE TABLE IF NOT EXISTS articles
 (

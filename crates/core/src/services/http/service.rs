@@ -4,5 +4,5 @@ use url::Url;
 
 #[async_trait]
 pub trait HttpService: Send + Sync {
-    async fn request_by_schedule(&self, url: Url) -> Result<Response, String>;
+    async fn request_by_schedule(&self, url: &Url) -> Result<Response, String>;
 }

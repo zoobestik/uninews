@@ -1,8 +1,6 @@
 use super::service::HttpService;
 use async_trait::async_trait;
 use reqwest::{Client, Response};
-use std::time::Duration;
-use tokio::time::sleep;
 use tracing::debug;
 use url::Url;
 
@@ -27,15 +25,13 @@ impl Default for LiveHttpService {
 
 #[async_trait]
 impl HttpService for LiveHttpService {
-    async fn request_by_schedule(&self, url: Url) -> Result<Response, String> {
-        sleep(Duration::from_secs(10)).await;
-
+    async fn request_by_schedule(&self, url: &Url) -> Result<Response, String> {
         let url_str = url.to_string();
         debug!("[http_service=\"{0}\"] fetching url", url_str);
 
         let resp = self
             .client
-            .get(url)
+            .get(url.as_str())
             .send()
             .await
             .map_err(|e| e.to_string())?;

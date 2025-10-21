@@ -1,17 +1,18 @@
-mod runners;
-
-use crate::services::AppServices;
+use crate::source::atom::watch_atom_feed;
 use crate::state::AppState;
 use clap::Parser;
-use runners::run_collectors;
-use std::env;
-use std::path::Path;
+use futures::future::try_join_all;
 use std::sync::Arc;
+use std::time::Duration;
+use tokio::time::sleep;
+use tracing::info;
+use uninews_core::models::SourceType;
+use uninews_core::models::telegram::TelegramChannelSource;
 
 #[derive(Parser, Debug)]
 #[command(
     about = "Collect and aggregate content from configured information sources",
-    visible_aliases = ["col"],
+    visible_aliases = ["clt"],
 )]
 pub struct CollectCommand {
     #[clap(
@@ -22,21 +23,47 @@ pub struct CollectCommand {
     watch: bool, // @todo: implement continuous watching mode that runs source update checks periodically instead of one-time collection
 }
 
-/// Main function for content collection command execution
+/// Collects and aggregates content from configured information sources.
+///
+/// # Arguments
+/// * `_cmd` - Command with options for content collection
 ///
 /// # Errors
-///
-/// Returns an error if:
-/// - a Config file cannot be read or parsed
-/// - Application state cannot be initialized with the given config
+/// Returns error string if:
+/// - Failed to initialize application state
+/// - Failed to fetch sources
+/// - Failed to start content watchers
+/// - Content watching tasks failed
 pub async fn run_collect(_cmd: CollectCommand) -> Result<(), String> {
-    let config_path =
-        env::var("UNINEWS_CONFIG_PATH").unwrap_or_else(|_| "./config.toml".to_string());
+    let app_state = Arc::new(AppState::new());
+    let sources = app_state.sources().await?.find_all_sources().await?;
 
-    let app_state =
-        AppState::try_from_file(Path::new(&config_path), Arc::new(AppServices::new())).await?;
+    let watchers: Vec<_> = sources
+        .iter()
+        .map(|source| {
+            let app_state = app_state.clone();
+            async move {
+                match source {
+                    SourceType::Atom(src) => watch_atom_feed(app_state, src).await?,
+                    SourceType::TelegramChannel(src) => {
+                        watch_telegram_channel(app_state, src).await?;
+                    }
+                }
+                Ok::<(), String>(())
+            }
+        })
+        .collect();
 
-    run_collectors(app_state).await;
+    try_join_all(watchers).await?;
 
+    Ok(())
+}
+
+async fn watch_telegram_channel(
+    _app_state: Arc<AppState>,
+    source: &TelegramChannelSource,
+) -> Result<(), String> {
+    sleep(Duration::from_millis(1)).await;
+    info!("Listen: {0:?}", source.source);
     Ok(())
 }

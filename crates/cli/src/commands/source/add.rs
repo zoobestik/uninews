@@ -3,7 +3,7 @@ use std::error::Error;
 use uninews_core::models::SourceTypeValue;
 use uninews_core::models::atom::AtomDraft;
 use uninews_core::repo::source::sqlite::SqliteSourceRepository;
-use uninews_core::repo::source::{CreateSource, SourceRepository};
+use uninews_core::repo::source::{SourceCreate, SourceRepository};
 use url::Url;
 
 #[derive(Debug, Args)]
@@ -22,7 +22,7 @@ pub async fn add_source(
     args: AddArgs,
 ) -> Result<(), Box<dyn Error>> {
     source_repo
-        .insert_or_update(CreateSource::Atom(AtomDraft::new(args.url)))
+        .insert_or_update(SourceCreate::Atom(AtomDraft::new(args.url)))
         .await?;
 
     Ok(())
