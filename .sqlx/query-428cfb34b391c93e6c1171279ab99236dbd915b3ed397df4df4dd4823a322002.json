@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            DELETE FROM uuid_mappings\n            WHERE internal_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "428cfb34b391c93e6c1171279ab99236dbd915b3ed397df4df4dd4823a322002"
+}

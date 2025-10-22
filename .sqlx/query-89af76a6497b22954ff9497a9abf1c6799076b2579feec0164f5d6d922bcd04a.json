@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT\n                s.id as \"id: Uuid\",\n                s.source as \"source: SourceTypeValue\",\n                s.created_at as \"created_at: DateTime<Utc>\",\n                d.url as \"url: Url\"\n            FROM sources s\n            LEFT JOIN\n                source_atom_details d ON s.id = d.atom_details_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id: Uuid",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "source: SourceTypeValue",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at: DateTime<Utc>",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "url: Url",
+        "ordinal": 3,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "89af76a6497b22954ff9497a9abf1c6799076b2579feec0164f5d6d922bcd04a"
+}

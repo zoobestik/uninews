@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT\n                s.id as \"id: Uuid\"\n            FROM sources s\n            LEFT JOIN\n                source_atom_details d ON s.id = d.atom_details_id\n            WHERE\n                url = ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id: Uuid",
+        "ordinal": 0,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "edd5263599e179571f0b409d3309dbc0cdf9dc3a4110999ba0e782da2499b28b"
+}
