@@ -31,11 +31,13 @@ pub struct AtomDraft {
     pub source_id: Uuid,
 }
 
+const ATOM_UUID: Uuid = Uuid::from_u128(0x0000_0000_0000_0000_0000_0000_0000_0001);
+
 impl AtomDraft {
     #[must_use]
     pub fn new(url: Url) -> Self {
         Self {
-            source_id: gen_consistent_uuid(&Uuid::now_v7(), url.as_str()),
+            source_id: gen_consistent_uuid(&ATOM_UUID, url.as_str()),
             url,
         }
     }

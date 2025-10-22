@@ -1,14 +1,3 @@
--- Create a user table
-CREATE TABLE IF NOT EXISTS users
-(
-    id            BLOB PRIMARY KEY NOT NULL, -- UUIDv7
-    username      TEXT             NOT NULL,
-    email         TEXT UNIQUE      NOT NULL,
-    password_hash TEXT             NOT NULL,
-    created_at    TEXT             NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-    updated_at    TEXT             NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
-);
-
 -- Create table for mapping UUIDv7 <-> UUIDv5
 CREATE TABLE IF NOT EXISTS uuid_mappings
 (
@@ -32,7 +21,7 @@ CREATE TABLE IF NOT EXISTS source_atom_details
 (
     atom_details_id  BLOB PRIMARY KEY NOT NULL, -- UUIDv7
     url              TEXT             NOT NULL,
-
+    -- metadata
     CONSTRAINT fk_sources_id FOREIGN KEY (atom_details_id) REFERENCES sources (id)
 );
 
@@ -43,7 +32,7 @@ CREATE TABLE IF NOT EXISTS articles
     parent_id  BLOB             NOT NULL, -- UUIDv7
     created_at TEXT             NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
     updated_at TEXT             NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-    -- key
+    -- metadata
     FOREIGN KEY (parent_id) REFERENCES sources (id)
 );
 

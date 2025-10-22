@@ -75,29 +75,32 @@ impl SqliteSourceRepository {
 
         let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
 
-        let atom_source = query!(
+        let result = query!(
             r#"
-            INSERT INTO sources (id, source)
+            INSERT INTO uuid_mappings (internal_id, external_id)
             VALUES ($1, $2)
-            RETURNING
-                id as "id: Uuid"
+            ON CONFLICT(external_id) DO NOTHING
             "#,
             id,
-            SourceTypeValue::Atom
+            draft.source_id,
         )
-        .fetch_one(&mut *tx)
+        .execute(&mut *tx)
         .await
         .map_err(|e| e.to_string())?;
 
         let url = draft.url.as_str();
 
+        if result.rows_affected() == 0 {
+            return Err(format!("[atom_feed={url}] mapping already exists"));
+        }
+
         query!(
             r#"
-            INSERT INTO source_atom_details (atom_details_id, url)
+            INSERT INTO sources (id, source)
             VALUES ($1, $2)
             "#,
-            atom_source.id,
-            url,
+            id,
+            SourceTypeValue::Atom
         )
         .execute(&mut *tx)
         .await
@@ -105,11 +108,11 @@ impl SqliteSourceRepository {
 
         query!(
             r#"
-            INSERT INTO uuid_mappings (internal_id, external_id)
+            INSERT INTO source_atom_details (atom_details_id, url)
             VALUES ($1, $2)
             "#,
-            atom_source.id,
-            draft.source_id,
+            id,
+            url,
         )
         .execute(&mut *tx)
         .await
@@ -208,7 +211,133 @@ impl SourceRepository for SqliteSourceRepository {
         Ok(sources)
     }
 
-    async fn insert_or_update(&self, draft: SourceCreate) -> Result<(), String> {
+    async fn find_by_url(&self, url: UrlLib) -> Result<Vec<Uuid>, String> {
+        let url = url.as_str();
+        let records = query!(
+            r#"
+            SELECT
+                s.id as "id: Uuid"
+            FROM sources s
+            LEFT JOIN
+                source_atom_details d ON s.id = d.atom_details_id
+            WHERE
+                url = ?
+            "#,
+            url
+        )
+        .fetch_all(&self.db_pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        Ok(records.into_iter().map(|r| r.id).collect())
+    }
+
+    async fn delete_by_id(&self, id: Uuid) -> Result<(), String> {
+        let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
+
+        query!(
+            r#"
+            DELETE FROM source_atom_details
+            WHERE atom_details_id = $1
+            "#,
+            id
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        query!(
+            r#"
+            DELETE FROM uuid_mappings
+            WHERE internal_id = $1
+            "#,
+            id
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        query!(
+            r#"
+            DELETE FROM sources
+            WHERE id = $1
+            "#,
+            id
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        tx.commit().await.map_err(|e| e.to_string())?;
+
+        Ok(())
+    }
+
+    async fn delete_by_type(
+        &self,
+        url: UrlLib,
+        source_type: SourceTypeValue,
+    ) -> Result<(), String> {
+        let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
+        let url = url.as_str();
+
+        let source = query!(
+            r#"
+            SELECT
+                s.id as "id: Uuid"
+            FROM
+                sources s
+            LEFT JOIN
+                source_atom_details d ON s.id = d.atom_details_id
+            WHERE
+                d.url = $1 AND s.source = $2
+            "#,
+            url,
+            source_type
+        )
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        query!(
+            r#"
+            DELETE FROM uuid_mappings
+            WHERE internal_id = $1
+            "#,
+            source.id
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        query!(
+            r#"
+            DELETE FROM sources
+            WHERE id = $1
+            "#,
+            source.id
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        query!(
+            r#"
+            DELETE FROM source_atom_details
+            WHERE atom_details_id = $1
+            "#,
+            url
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        tx.commit().await.map_err(|e| e.to_string())?;
+
+        Ok(())
+    }
+
+    async fn insert(&self, draft: SourceCreate) -> Result<(), String> {
         match draft {
             SourceCreate::Atom(draft) => self.insert_atom(draft).await?,
             SourceCreate::TelegramChannel(draft) => self.insert_telegram_channel(draft).await?,

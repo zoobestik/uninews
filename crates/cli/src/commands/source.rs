@@ -1,6 +1,8 @@
 mod add;
+mod remove;
 
 use self::add::{AddArgs, add_source};
+use self::remove::{RmArgs, remove_source};
 use clap::{Parser, Subcommand};
 use sqlx::SqlitePool;
 use std::error::Error;
@@ -20,12 +22,19 @@ pub struct SourceCommand {
 pub enum SourceCommands {
     #[clap(about = "Add a new information source (such as Atom feed or Telegram channel)")]
     Add(AddArgs),
+    #[command(
+        about = "Remove an information source (such as Atom feed or Telegram channel)",
+        visible_aliases = ["rm"]
+    )]
+    Remove(RmArgs),
 }
 
 pub async fn run_source(cmd: SourceCommand) -> Result<(), Box<dyn Error>> {
     let db_pool = SqlitePool::connect("sqlite:./data/app.sqlite").await?;
     let source_repo = SqliteSourceRepository::new(db_pool);
+
     match cmd.command {
         SourceCommands::Add(args) => add_source(source_repo, args).await,
+        SourceCommands::Remove(args) => remove_source(source_repo, args).await,
     }
 }
