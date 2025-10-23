@@ -1,8 +1,8 @@
 pub mod atom;
 pub mod telegram;
 
-use crate::models::atom::AtomSource;
-use crate::models::source::telegram::TelegramChannelSource;
+use self::atom::AtomSource;
+use self::telegram::TelegramChannelSource;
 use async_trait::async_trait;
 use clap::ValueEnum;
 use serde::{Deserialize, Serialize};

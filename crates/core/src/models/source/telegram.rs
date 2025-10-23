@@ -1,4 +1,5 @@
-use crate::models::SourceTypeValue;
+use super::SourceTypeValue;
+use crate::uuid::gen_consistent_uuid;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -22,5 +23,18 @@ impl TelegramChannelSource {
 }
 
 pub struct TelegramChannelDraft {
+    pub username: String,
     pub source_id: Uuid,
+}
+
+static TELEGRAM_UUID: Uuid = Uuid::from_u128(0x0000_0000_0000_0000_0000_0000_0000_0002);
+
+impl TelegramChannelDraft {
+    #[must_use]
+    pub fn new(username: String) -> Self {
+        Self {
+            source_id: gen_consistent_uuid(&TELEGRAM_UUID, username.as_str()),
+            username,
+        }
+    }
 }

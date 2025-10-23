@@ -1,4 +1,4 @@
-use crate::models::SourceTypeValue;
+use super::SourceTypeValue;
 use crate::uuid::gen_consistent_uuid;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
