@@ -1,11 +1,13 @@
 mod add;
 mod remove;
 
-use self::add::{AddArgs, add_source};
+use self::add::{AddCommand, add_source};
 use self::remove::{RmArgs, remove_source};
 use clap::{Parser, Subcommand};
 use sqlx::SqlitePool;
 use std::error::Error;
+use std::sync::Arc;
+use uninews_core::repo::source::SourceRepository;
 use uninews_core::repo::source::sqlite::SqliteSourceRepository;
 
 #[derive(Parser, Debug)]
@@ -20,8 +22,7 @@ pub struct SourceCommand {
 
 #[derive(Debug, Subcommand)]
 pub enum SourceCommands {
-    #[clap(about = "Add a new information source (such as Atom feed or Telegram channel)")]
-    Add(AddArgs),
+    Add(AddCommand),
     #[command(
         about = "Remove an information source (such as Atom feed or Telegram channel)",
         visible_aliases = ["rm"]
@@ -29,12 +30,14 @@ pub enum SourceCommands {
     Remove(RmArgs),
 }
 
+type SourceService = Arc<dyn SourceRepository>;
+
 pub async fn run_source(cmd: SourceCommand) -> Result<(), Box<dyn Error>> {
     let db_pool = SqlitePool::connect("sqlite:./data/app.sqlite").await?;
-    let source_repo = SqliteSourceRepository::new(db_pool);
+    let source_repo: SourceService = Arc::new(SqliteSourceRepository::new(db_pool));
 
     match cmd.command {
-        SourceCommands::Add(args) => add_source(source_repo, args).await,
+        SourceCommands::Add(cmd) => add_source(source_repo, cmd).await,
         SourceCommands::Remove(args) => remove_source(source_repo, args).await,
     }
 }

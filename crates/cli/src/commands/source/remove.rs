@@ -1,9 +1,10 @@
+use super::SourceService;
 use clap::Args;
 use std::error::Error;
+use std::sync::Arc;
 use tracing::info;
 use uninews_core::models::SourceTypeValue;
 use uninews_core::repo::source::SourceRepository;
-use uninews_core::repo::source::sqlite::SqliteSourceRepository;
 use uninews_core::url::parse_url;
 use url::Url;
 
@@ -14,26 +15,20 @@ pub struct RmArgs {
     source_type: Option<SourceTypeValue>,
 }
 
-pub async fn remove_source(
-    source_repo: SqliteSourceRepository,
-    args: RmArgs,
-) -> Result<(), Box<dyn Error>> {
+pub async fn remove_source(repo: SourceService, args: RmArgs) -> Result<(), Box<dyn Error>> {
     match args.source_type {
-        Some(source_type) => remove_by_args(source_repo, source_type, args.url).await?,
-        None => remove_by_url(source_repo, args.url).await?,
+        Some(source_type) => remove_by_args(repo, source_type, args.url).await?,
+        None => remove_by_url(repo, args.url).await?,
     }
     Ok(())
 }
 
-async fn remove_by_url(
-    source_repo: SqliteSourceRepository,
-    url: Url,
-) -> Result<(), Box<dyn Error>> {
-    let mut ids = source_repo.find_by_url(url).await?.into_iter();
+async fn remove_by_url(repo: Arc<dyn SourceRepository>, url: Url) -> Result<(), Box<dyn Error>> {
+    let mut ids = repo.find_by_url(url).await?.into_iter();
 
     match (ids.next(), ids.next()) {
         (Some(id), None) => {
-            source_repo.delete_by_id(id).await?;
+            repo.delete_by_id(id).await?;
             Ok(())
         }
         (None, None) => {
@@ -45,10 +40,10 @@ async fn remove_by_url(
 }
 
 async fn remove_by_args(
-    source_repo: SqliteSourceRepository,
+    repo: SourceService,
     source_type: SourceTypeValue,
     url: Url,
 ) -> Result<(), Box<dyn Error>> {
-    source_repo.delete_by_type(url, source_type).await?;
+    repo.delete_by_type(url, source_type).await?;
     Ok(())
 }
