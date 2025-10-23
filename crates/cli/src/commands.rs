@@ -15,24 +15,21 @@ pub enum Commands {
 }
 
 pub async fn run_commands(command: Commands) {
-    match command {
-        Commands::Collect(cmd) => {
-            if let Err(e) = run_collect(cmd).await {
-                eprintln!("Error initializing collecting: {e}");
-                exit(1);
-            }
-        }
-        Commands::Init(cmd) => {
-            if let Err(e) = init_app(cmd).await {
-                eprintln!("Error initializing database: {e}");
-                exit(1);
-            }
-        }
-        Commands::Source(cmd) => {
-            if let Err(e) = run_source(cmd).await {
-                eprintln!("Error in source command: {e}");
-                exit(1);
-            }
-        }
+    let _ = match command {
+        Commands::Collect(cmd) => run_collect(cmd)
+            .await
+            .map_err(|e| format!("Error in collect command: {e}")),
+
+        Commands::Init(cmd) => init_app(cmd)
+            .await
+            .map_err(|e| format!("Error initializing database: {e}")),
+
+        Commands::Source(cmd) => run_source(cmd)
+            .await
+            .map_err(|e| format!("Error in source command: {e}")),
     }
+    .map_err(|e| {
+        eprintln!("{}", e);
+        exit(1);
+    });
 }
