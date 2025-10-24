@@ -9,6 +9,7 @@ use clap::{Parser, Subcommand};
 use sqlx::SqlitePool;
 use std::error::Error;
 use std::sync::Arc;
+use uninews_core::fs::get_db_uri;
 use uninews_core::repo::source::sqlite::SqliteSourceRepository;
 
 #[derive(Parser, Debug)]
@@ -30,7 +31,7 @@ pub enum SourceCommands {
 }
 
 pub async fn run_source(cmd: SourceCommand) -> Result<(), Box<dyn Error>> {
-    let db_pool = SqlitePool::connect("sqlite:./data/app.sqlite").await?;
+    let db_pool = SqlitePool::connect(&get_db_uri()?).await?;
     let source_repo = Arc::new(SqliteSourceRepository::new(db_pool));
 
     match cmd.command {

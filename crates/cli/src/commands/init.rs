@@ -25,7 +25,7 @@ pub async fn init_app(args: InitCommand) -> Result<(), Box<dyn Error>> {
     let db_file_exists = fs::try_exists(db_file).await.unwrap_or(false);
 
     if db_file_exists && !args.force {
-        info!("Database file already exists. Do you want to override it? [y/N] ");
+        info!("Database file already exists. Do you want to overwrite it? [y/N] ");
         io::stdout().flush().unwrap();
 
         let mut input = String::new();

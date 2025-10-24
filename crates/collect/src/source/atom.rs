@@ -60,23 +60,34 @@ async fn read_periodically(
     Ok(news)
 }
 
+static POLL_INTERVAL_SECS: usize = 60;
+
 // @todo: In the `watch_updates` function, there seems to be a potential issue with an infinite loop (`loop`) without any delay or condition. This can cause the service to block resources at high priority and lead to performance degradation. If the loop fails, it could also leave the application in an unstable state.
 pub async fn watch_atom_feed(app_state: Arc<AppState>, source: &AtomSource) -> Result<(), String> {
     info!("Watch [atom_feed=\"{0}\"] news", source.url);
+
+    let max_backoff_secs = 10 * POLL_INTERVAL_SECS;
+    let mut backoff_secs = POLL_INTERVAL_SECS;
 
     let news_service = app_state.news().await?;
 
     loop {
         let result = match read_periodically(app_state.clone(), source).await {
-            Ok(news) => update_atom_news(source, news_service, news).await,
-            Err(e) => Err(e),
+            Ok(news) => {
+                backoff_secs = POLL_INTERVAL_SECS;
+                update_atom_news(source, news_service, news).await
+            }
+            Err(e) => {
+                backoff_secs = (backoff_secs * 2).min(max_backoff_secs);
+                Err(e)
+            }
         };
 
         if let Err(e) = result {
             error!("[atom_feed=\"{0}\"] {e}", source.url);
         }
 
-        sleep(Duration::from_secs(60)).await;
+        sleep(Duration::from_secs(backoff_secs as u64)).await;
     }
 }
 

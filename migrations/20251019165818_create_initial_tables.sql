@@ -1,3 +1,11 @@
+-- Create a table for data sources
+CREATE TABLE IF NOT EXISTS sources
+(
+    id         BLOB PRIMARY KEY NOT NULL, -- UUIDv7
+    source     TEXT             NOT NULL CHECK (source IN ('atom', 'telegram')),
+    created_at TEXT             NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+
 -- Create table for mapping UUIDv7 <-> UUIDv5
 CREATE TABLE IF NOT EXISTS uuid_mappings
 (
@@ -9,14 +17,6 @@ CREATE TABLE IF NOT EXISTS uuid_mappings
 );
 
 CREATE INDEX IF NOT EXISTS idx_external_id ON uuid_mappings (external_id);
-
--- Create a table for data sources
-CREATE TABLE IF NOT EXISTS sources
-(
-    id         BLOB PRIMARY KEY NOT NULL, -- UUIDv7
-    source     TEXT             NOT NULL CHECK (source IN ('atom', 'telegram')),
-    created_at TEXT             NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
-);
 
 -- Create a table for atom-feed additional data
 CREATE TABLE IF NOT EXISTS source_atom_details
