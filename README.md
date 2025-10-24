@@ -3,61 +3,66 @@
 
 # UniNews
 
-A small Rust workspace for experimenting with collecting content sources into a single feed pipeline.
+A small Rust CLI to collect content from multiple sources into one local feed. Supports Atom/RSS feeds and Telegram channels, stored in a SQLite database.
 
-🚨Early alpha; behavior will evolve.
+Status: early alpha; behavior will evolve. The `--watch` flag is experimental.
 
 ## Features
- - Simple, fast, easy to use
- - Configurable news sources:
-   - Atom
-   - Telegram
+- Single binary: `uninews`
+- SQLite storage with automatic migrations
+- Manage sources: add/list/remove (Atom/RSS and Telegram) with validation
+- One-shot collection; planned continuous mode via `--watch`
+- Logging controlled by `RUST_LOG`
 
-## Development
-
-### Prerequisites
-
-- Rust toolchain: stable (as per [`rust-toolchain.toml`](./rust-toolchain.toml))
-- Install [Taplo](https://github.com/tamasfe/taplo): `cargo install taplo-cli`
-
-### Run
-
-You can use the provided cargo aliases (recommended):
+## Quickstart
+Build the release binary:
 
 ```bash
-cargo collect
+cargo build --release
 ```
 
-Set the log level (optional):
+Run commands:
+
 ```bash
-RUST_LOG=debug cargo collect
+./target/release/uninews --help
+./target/release/uninews init
+./target/release/uninews source add atom https://example.com/feed.xml
+./target/release/uninews source ls
+RUST_LOG=debug ./target/release/uninews collect
 ```
 
-Other binaries:
-- Manage (WIP):
-  ```bash
-  cargo manage
-  ```
+Alternative (no install):
 
-## Configuration
-
-By default, the app loads a local `.env` (if present), then reads the configuration from `UNINEWS_CONFIG_PATH` if set; otherwise it falls back to `./config.toml` relative to the current working directory. See [configuration.md](docs/configuration.md) for details.
-
-Short snippet:
-```toml
-[[atom]]
-source_url = "https://example.com/feed.xml"
-
-[[telegram]]
-nickname = "..."
+```bash
+cargo run -p uninews_cli -- --help
 ```
 
-Full example and field reference: [docs/configuration.md](docs/configuration.md)
+To install the binary into your PATH, see [Installation](docs/installation.md).
+
+## Documentation
+- Start → [docs/home.md](docs/home.md)
+- Getting Started → [docs/getting-started.md](docs/getting-started.md)
+- Installation → [docs/installation.md](docs/installation.md)
+- CLI reference → [docs/cli.md](docs/cli.md)
+- Sources → [docs/sources.md](docs/sources.md)
+- Database → [docs/database.md](docs/database.md)
+- Environment → [docs/environment.md](docs/environment.md)
+
+Note: a configuration file is not supported yet. Use CLI commands and environment variables.
 
 ## Contributing
 
 Issues and PRs are not welcome. 🙃
-Please open an issue to discuss bigger changes.
+For larger changes, please open an issue first.
+
+- Build: `cargo build --release`
+- Formatting: `cargo fmt --all`
+- Lints: `cargo clippy --all-targets --all-features -- -D warnings`
+- Smoke test:
+  ```bash
+  ./target/release/uninews init --force
+  ./target/release/uninews source ls
+  ```
 
 ## Acknowledgements
 [![MIT license][mit-img]][mit-url] [![Develop By][author-img]][author-url]
@@ -69,4 +74,4 @@ Please open an issue to discuss bigger changes.
 [ci-url]: https://github.com/zoobestik/uninews/actions/workflows/ci.yml
 
 [author-img]: https://img.shields.io/badge/develop%20by-zoobestik-blue.svg?style=flat
-[author-url]: https://ru.linkedin.com/in/kbchernenko
+[author-url]: https://www.linkedin.com/in/kbchernenko/
