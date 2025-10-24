@@ -182,7 +182,7 @@ impl SqliteSourceRepository {
 
         if result.rows_affected() == 0 {
             return Err(format!(
-                "[telegram_channel={0}] username already exist",
+                "[telegram_channel={0}] username already exists",
                 draft.username
             ));
         }

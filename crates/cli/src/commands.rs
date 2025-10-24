@@ -15,7 +15,7 @@ pub enum Commands {
 }
 
 pub async fn run_commands(command: Commands) {
-    let _ = match command {
+    let result = match command {
         Commands::Collect(cmd) => run_collect(cmd)
             .await
             .map_err(|e| format!("Error in collect command: {e}")),
@@ -27,9 +27,10 @@ pub async fn run_commands(command: Commands) {
         Commands::Source(cmd) => run_source(cmd)
             .await
             .map_err(|e| format!("Error in source command: {e}")),
-    }
-    .map_err(|e| {
+    };
+
+    if let Err(e) = result {
         eprintln!("{}", e);
         exit(1);
-    });
+    }
 }
