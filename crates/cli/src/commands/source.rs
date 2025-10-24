@@ -1,8 +1,10 @@
 mod add;
+mod list;
 mod remove;
 
 use self::add::{AddCommand, add_source};
 use self::remove::{RemoveCommand, remove_source};
+use crate::commands::source::list::{ArgsList, list_sources};
 use clap::{Parser, Subcommand};
 use sqlx::SqlitePool;
 use std::error::Error;
@@ -23,6 +25,7 @@ pub struct SourceCommand {
 pub enum SourceCommands {
     Add(AddCommand),
     Remove(RemoveCommand),
+    List(ArgsList),
 }
 
 pub async fn run_source(cmd: SourceCommand) -> Result<(), Box<dyn Error>> {
@@ -31,6 +34,7 @@ pub async fn run_source(cmd: SourceCommand) -> Result<(), Box<dyn Error>> {
 
     match cmd.command {
         SourceCommands::Add(cmd) => add_source(source_repo, cmd).await,
-        SourceCommands::Remove(args) => remove_source(source_repo, args).await,
+        SourceCommands::Remove(cmd) => remove_source(source_repo, cmd).await,
+        SourceCommands::List(args) => list_sources(source_repo, args).await,
     }
 }

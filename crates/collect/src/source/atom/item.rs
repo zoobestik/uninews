@@ -40,7 +40,8 @@ pub async fn try_atom_news_from_rss_item(
         .ok_or_else(|| format!("Missing guid for {link}"))?
         .value;
 
-    let source_id = gen_consistent_uuid(&source.id, &format!("{link}-{guid}"));
+    let parent_id = source.id;
+    let source_id = gen_consistent_uuid(&parent_id, &format!("{link}-{guid}"));
 
     let (title, description, content) = try_join!(
         html_to_title(item.title.unwrap_or_default()),
@@ -53,7 +54,7 @@ pub async fn try_atom_news_from_rss_item(
     .map_err(|e| format!("Sanitize error for {source_id}: {e}"))?;
 
     Ok(AtomItem {
-        parent_id: source.id,
+        parent_id,
         source_id,
 
         guid,

@@ -2,6 +2,7 @@ use super::SourceTypeValue;
 use crate::uuid::gen_consistent_uuid;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use url::Url;
 use uuid::Uuid;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -22,6 +23,21 @@ impl TelegramChannelSource {
             created_at,
             username,
         }
+    }
+
+    /// Returns a public URL to the Telegram channel.
+    ///
+    /// # Returns
+    /// A URL in the format `https://t.me/s/{username}`.
+    ///
+    /// # Errors
+    /// Returns an error if the username results in an invalid URL.
+    pub fn url(&self) -> Result<Url, String> {
+        let name = &self.username;
+        let channel_url = Url::parse(&format!("https://t.me/s/{name}"))
+            .map_err(|e| format!("[telegram_channel=\"{name}\"] invalid channel name: {e}"))?;
+
+        Ok(channel_url)
     }
 }
 
