@@ -9,7 +9,7 @@ use uninews_core::models::SourceType;
 #[derive(Parser, Debug)]
 #[command(
     about = "Collect and aggregate content from configured information sources",
-    visible_aliases = ["clt"],
+    visible_aliases = ["cl"],
 )]
 pub struct CollectCommand {
     #[clap(
