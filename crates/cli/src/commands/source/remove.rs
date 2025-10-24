@@ -1,51 +1,38 @@
-use clap::Args;
+mod atom;
+mod telegram;
+
+use self::atom::{RemoveAtom, rm_atom_source};
+use self::telegram::{RemoveTelegramChannel, rm_telegram_channel_source};
+use clap::{Parser, Subcommand};
 use std::error::Error;
 use std::sync::Arc;
-use tracing::info;
-use uninews_core::models::SourceTypeValue;
 use uninews_core::repo::source::SourceRepository;
-use uninews_core::url::parse_url;
-use url::Url;
 
-#[derive(Debug, Args)]
-pub struct RmArgs {
-    #[arg(value_parser = parse_url)]
-    url: Url,
-    source_type: Option<SourceTypeValue>,
+#[derive(Parser, Debug)]
+#[command(
+        about = "Remove an information source (such as Atom feed or Telegram channel)",
+        visible_aliases = ["rm"]
+)]
+pub struct RemoveCommand {
+    #[command(subcommand)]
+    command: RemoveCommands,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum RemoveCommands {
+    #[command(about = "Remove an Atom/RSS feed source", visible_aliases=["rss"])]
+    Atom(RemoveAtom),
+
+    #[command(about = "Remove a Telegram channel source", visible_aliases=["tg"])]
+    Telegram(RemoveTelegramChannel),
 }
 
 pub async fn remove_source(
     repo: Arc<impl SourceRepository>,
-    args: RmArgs,
+    command: RemoveCommand,
 ) -> Result<(), Box<dyn Error>> {
-    match args.source_type {
-        Some(source_type) => remove_by_args(repo, source_type, args.url).await?,
-        None => remove_by_url(repo, args.url).await?,
+    match command.command {
+        RemoveCommands::Atom(args) => rm_atom_source(repo, args).await,
+        RemoveCommands::Telegram(args) => rm_telegram_channel_source(repo, args).await,
     }
-    Ok(())
-}
-
-async fn remove_by_url(repo: Arc<impl SourceRepository>, url: Url) -> Result<(), Box<dyn Error>> {
-    let mut ids = repo.find_by_url(url).await?.into_iter();
-
-    match (ids.next(), ids.next()) {
-        (Some(id), None) => {
-            repo.delete_by_id(id).await?;
-            Ok(())
-        }
-        (None, None) => {
-            info!("No source found with the specified URL");
-            Ok(())
-        }
-        _ => Err("More than one source found".into()),
-    }
-}
-
-async fn remove_by_args(
-    repo: Arc<impl SourceRepository>,
-    source_type: SourceTypeValue,
-    url: Url,
-) -> Result<(), Box<dyn Error>> {
-    repo.delete_by_type(url, source_type).await?;
-    Ok(())
 }

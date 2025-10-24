@@ -2,6 +2,7 @@ use super::{AtomDraft, SourceCreate, SourceRepository, TelegramChannelDraft};
 use crate::models::atom::AtomSource;
 use crate::models::telegram::TelegramChannelSource;
 use crate::models::{SourceType, SourceTypeValue};
+use crate::parse::parse_url;
 use async_trait::async_trait;
 use sqlx::error::BoxDynError;
 use sqlx::sqlite::SqliteValueRef;
@@ -28,7 +29,7 @@ impl Deref for Url {
 impl<'r> Decode<'r, Sqlite> for Url {
     fn decode(value: SqliteValueRef<'r>) -> Result<Self, BoxDynError> {
         let url_str = <String as Decode<Sqlite>>::decode(value)?;
-        let inner_url = url::Url::parse(&url_str)?;
+        let inner_url = parse_url(&url_str)?;
         Ok(Self(inner_url))
     }
 }
@@ -46,7 +47,9 @@ struct SourceQueryResult {
     source: SourceTypeValue,
     created_at: DateTime<Utc>,
 
-    url: Option<Url>,
+    atom_url: Option<Url>,
+
+    telegram_username: Option<String>,
 }
 
 impl TryFrom<SourceQueryResult> for SourceType {
@@ -58,13 +61,17 @@ impl TryFrom<SourceQueryResult> for SourceType {
                 source.id,
                 source.created_at,
                 source
-                    .url
+                    .atom_url
                     .ok_or_else(|| "Missing URL for Atom source".to_string())?
                     .0,
             )),
-            SourceTypeValue::TelegramChannel => {
-                Self::TelegramChannel(TelegramChannelSource::new(source.id, source.created_at))
-            }
+            SourceTypeValue::Telegram => Self::TelegramChannel(TelegramChannelSource::new(
+                source.id,
+                source
+                    .telegram_username
+                    .ok_or_else(|| "Missing username for Telegram source".to_string())?,
+                source.created_at,
+            )),
         })
     }
 }
@@ -74,6 +81,18 @@ impl SqliteSourceRepository {
         let id = Uuid::now_v7();
 
         let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
+
+        query!(
+            r#"
+            INSERT INTO sources (id, source)
+            VALUES ($1, $2)
+            "#,
+            id,
+            SourceTypeValue::Atom
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
 
         let result = query!(
             r#"
@@ -96,18 +115,6 @@ impl SqliteSourceRepository {
 
         query!(
             r#"
-            INSERT INTO sources (id, source)
-            VALUES ($1, $2)
-            "#,
-            id,
-            SourceTypeValue::Atom
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| e.to_string())?;
-
-        query!(
-            r#"
             INSERT INTO source_atom_details (atom_details_id, url)
             VALUES ($1, $2)
             "#,
@@ -126,34 +133,61 @@ impl SqliteSourceRepository {
     async fn insert_telegram_channel(&self, draft: TelegramChannelDraft) -> Result<(), String> {
         let id = Uuid::now_v7();
 
-        query_as!(
-            TelegramChannelSource,
-            r#"
-            INSERT INTO sources (id, source)
-            VALUES ($1, $2)
-            RETURNING
-                id as "id: Uuid",
-                source as "source: SourceTypeValue",
-                created_at as "created_at: DateTime<Utc>"
-            "#,
-            id,
-            SourceTypeValue::TelegramChannel,
-        )
-        .fetch_one(&self.db_pool)
-        .await
-        .map_err(|e| e.to_string())?;
+        let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
 
         query!(
             r#"
+            INSERT INTO sources (id, source)
+            VALUES ($1, $2)
+            "#,
+            id,
+            SourceTypeValue::Telegram,
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        let result = query!(
+            r#"
             INSERT INTO uuid_mappings (internal_id, external_id)
             VALUES ($1, $2)
+            ON CONFLICT(external_id) DO NOTHING
             "#,
             id,
             draft.source_id,
         )
-        .execute(&self.db_pool)
+        .execute(&mut *tx)
         .await
         .map_err(|e| e.to_string())?;
+
+        if result.rows_affected() == 0 {
+            return Err(format!(
+                "[telegram_channel={0}] mapping already exists",
+                draft.username
+            ));
+        }
+
+        let result = query!(
+            r#"
+            INSERT INTO source_telegram_details (telegram_details_id, username)
+            VALUES ($1, $2)
+            ON CONFLICT(username) DO NOTHING
+            "#,
+            id,
+            draft.username,
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        if result.rows_affected() == 0 {
+            return Err(format!(
+                "[telegram_channel={0}] username already exist",
+                draft.username
+            ));
+        }
+
+        tx.commit().await.map_err(|e| e.to_string())?;
 
         Ok(())
     }
@@ -166,15 +200,20 @@ impl SourceRepository for SqliteSourceRepository {
             SourceQueryResult,
             r#"
             SELECT
-                s.id as "id: Uuid",
-                s.source as "source: SourceTypeValue",
-                s.created_at as "created_at: DateTime<Utc>",
-                d.url as "url: Url"
-            FROM sources s
+                src.id as "id: Uuid",
+                src.source as "source: SourceTypeValue",
+                src.created_at as "created_at: DateTime<Utc>",
+                -- atom details
+                atom.url as "atom_url: Url",
+                -- telegram details
+                tg.username as "telegram_username: String"
+            FROM sources src
             LEFT JOIN
-                source_atom_details d ON s.id = d.atom_details_id
+                source_atom_details atom ON src.id = atom.atom_details_id
+            LEFT JOIN
+                source_telegram_details tg ON src.id = tg.telegram_details_id
             WHERE
-                s.id = ?
+                src.id = ?
             "#,
             id
         )
@@ -190,13 +229,18 @@ impl SourceRepository for SqliteSourceRepository {
             SourceQueryResult,
             r#"
             SELECT
-                s.id as "id: Uuid",
-                s.source as "source: SourceTypeValue",
-                s.created_at as "created_at: DateTime<Utc>",
-                d.url as "url: Url"
-            FROM sources s
+                src.id as "id: Uuid",
+                src.source as "source: SourceTypeValue",
+                src.created_at as "created_at: DateTime<Utc>",
+                -- atom details
+                atom.url as "atom_url: Url",
+                -- telegram details
+                tg.username as "telegram_username: String"
+            FROM sources src
             LEFT JOIN
-                source_atom_details d ON s.id = d.atom_details_id
+                source_atom_details atom ON src.id = atom.atom_details_id
+            LEFT JOIN
+                source_telegram_details tg ON src.id = tg.telegram_details_id
             "#
         )
         .fetch_all(&self.db_pool)
@@ -211,51 +255,8 @@ impl SourceRepository for SqliteSourceRepository {
         Ok(sources)
     }
 
-    async fn find_by_url(&self, url: UrlLib) -> Result<Vec<Uuid>, String> {
-        let url = url.as_str();
-        let records = query!(
-            r#"
-            SELECT
-                s.id as "id: Uuid"
-            FROM sources s
-            LEFT JOIN
-                source_atom_details d ON s.id = d.atom_details_id
-            WHERE
-                url = ?
-            "#,
-            url
-        )
-        .fetch_all(&self.db_pool)
-        .await
-        .map_err(|e| e.to_string())?;
-
-        Ok(records.into_iter().map(|r| r.id).collect())
-    }
-
     async fn delete_by_id(&self, id: Uuid) -> Result<(), String> {
         let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
-
-        query!(
-            r#"
-            DELETE FROM source_atom_details
-            WHERE atom_details_id = $1
-            "#,
-            id
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| e.to_string())?;
-
-        query!(
-            r#"
-            DELETE FROM uuid_mappings
-            WHERE internal_id = $1
-            "#,
-            id
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| e.to_string())?;
 
         query!(
             r#"
@@ -273,67 +274,26 @@ impl SourceRepository for SqliteSourceRepository {
         Ok(())
     }
 
-    async fn delete_by_type(
-        &self,
-        url: UrlLib,
-        source_type: SourceTypeValue,
-    ) -> Result<(), String> {
-        let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
-        let url = url.as_str();
-
-        let source = query!(
-            r#"
-            SELECT
-                s.id as "id: Uuid"
-            FROM
-                sources s
-            LEFT JOIN
-                source_atom_details d ON s.id = d.atom_details_id
-            WHERE
-                d.url = $1 AND s.source = $2
-            "#,
-            url,
-            source_type
-        )
-        .fetch_one(&mut *tx)
-        .await
-        .map_err(|e| e.to_string())?;
-
-        query!(
-            r#"
-            DELETE FROM uuid_mappings
-            WHERE internal_id = $1
-            "#,
-            source.id
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| e.to_string())?;
-
-        query!(
+    async fn delete_with_type(&self, id: Uuid, source_type: SourceTypeValue) -> Result<(), String> {
+        let result = query!(
             r#"
             DELETE FROM sources
-            WHERE id = $1
+            WHERE id IN (
+                SELECT internal_id
+                FROM uuid_mappings
+                WHERE external_id = $1
+            ) AND source = $2
             "#,
-            source.id
+            id,
+            source_type,
         )
-        .execute(&mut *tx)
+        .execute(&self.db_pool)
         .await
         .map_err(|e| e.to_string())?;
 
-        query!(
-            r#"
-            DELETE FROM source_atom_details
-            WHERE atom_details_id = $1
-            "#,
-            url
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| e.to_string())?;
-
-        tx.commit().await.map_err(|e| e.to_string())?;
-
+        if result.rows_affected() == 0 {
+            return Err(format!("source {id} not found"));
+        }
         Ok(())
     }
 

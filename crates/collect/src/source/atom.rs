@@ -85,12 +85,12 @@ async fn update_atom_news(
     news_service: &Arc<dyn NewsService>,
     news: Vec<Arc<dyn News>>,
 ) -> Result<(), String> {
-    let len = news.len();
-    let news: Vec<&dyn News> = news.iter().map(AsRef::as_ref).collect();
-    news_service.update_news(news).await;
+    let update: Vec<&dyn News> = news.iter().map(AsRef::as_ref).collect();
+    news_service.update_news(update).await;
     debug!(
         "[atom_feed=\"{0}\"] Updated {1} news items",
-        source.url, len
+        source.url,
+        news.len()
     );
     Ok(())
 }

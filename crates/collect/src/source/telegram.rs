@@ -1,54 +1,3 @@
-// use crate::source::SourceType;
-// use async_trait::async_trait;
-// use tracing::{debug, info};
-// use uninews_core::models::Source;
-// use uninews_core::uuid::gen_consistent_uuid;
-// use url::Url;
-// use uuid::Uuid;
-//
-// #[derive(Debug)]
-// pub struct TelegramChannel {
-//     channel_url: Url,
-//     group_uuid: Uuid,
-// }
-//
-// impl TelegramChannel {
-//     /// Validate a Telegram channel nickname.
-//     ///
-//     /// # Arguments
-//     /// * `name` - The nickname to validate
-//     ///
-//     /// # Errors
-//     /// Returns error if:
-//     /// * Nickname is longer
-//     /// * Nickname is shorter
-//     /// * Nickname contains characters other than letters, numbers, and underscores
-//     pub fn validate_nickname(name: &str) -> Result<(), String> {
-//         if name.len() > 32 {
-//             return Err(format!(
-//                 "{name} is too long for a nickname; it must be less than 32 characters."
-//             ));
-//         }
-//
-//         if name.len() < 5 {
-//             return Err(format!(
-//                 "{name} is too short for a nickname; it must be at least 5 characters."
-//             ));
-//         }
-//
-//         let has_invalid_chars = name
-//             .chars()
-//             .any(|c| !(c.is_ascii_alphanumeric() || c == '_'));
-//
-//         if has_invalid_chars {
-//             return Err(format!(
-//                 "{name} is an invalid nickname. It must contain only letters, numbers, and underscores."
-//             ));
-//         }
-//
-//         Ok(())
-//     }
-//
 //     /// Creates a new Telegram channel instance from a nickname.
 //     ///
 //     /// # Arguments
@@ -72,17 +21,29 @@
 //         })
 //     }
 // }
-//
-// #[async_trait]
-// impl Source for TelegramChannel {
-//     fn source_id(&self) -> Uuid {
-//         gen_consistent_uuid(&self.group_uuid, self.channel_url.as_str())
-//     }
-//     fn source_type(&self) -> String {
-//         SourceType::TelegramChannel.to_string()
-//     }
-//
-//     async fn watch_updates(&self) {
-//         info!("Running source: {}", self.channel_url);
-//     }
-// }
+
+use crate::state::AppState;
+use std::sync::Arc;
+use tracing::{debug, info};
+use uninews_core::models::telegram::TelegramChannelSource;
+use uninews_core::parse::parse_telegram_username;
+use url::Url;
+
+pub fn get_telegram_channel_url(name: &str) -> Result<Url, String> {
+    let name = parse_telegram_username(name)?;
+
+    let channel_url = Url::parse(&format!("https://t.me/s/{name}"))
+        .map_err(|e| format!("[telegram_channel=\"{name}\"] invalid channel name: {e}"))?;
+
+    Ok(channel_url)
+}
+
+pub async fn watch_telegram_channel(
+    _app_state: Arc<AppState>,
+    source: &TelegramChannelSource,
+) -> Result<(), String> {
+    info!("Watch [telegram_channel=\"{0}\"] news", source.id);
+    let url = get_telegram_channel_url(&source.username)?;
+    debug!("fetch {url}");
+    Ok(())
+}

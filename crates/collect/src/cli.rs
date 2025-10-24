@@ -1,13 +1,10 @@
 use crate::source::atom::watch_atom_feed;
+use crate::source::telegram::watch_telegram_channel;
 use crate::state::AppState;
 use clap::Parser;
 use futures::future::try_join_all;
 use std::sync::Arc;
-use std::time::Duration;
-use tokio::time::sleep;
-use tracing::info;
 use uninews_core::models::SourceType;
-use uninews_core::models::telegram::TelegramChannelSource;
 
 #[derive(Parser, Debug)]
 #[command(
@@ -56,14 +53,5 @@ pub async fn run_collect(_cmd: CollectCommand) -> Result<(), String> {
 
     try_join_all(watchers).await?;
 
-    Ok(())
-}
-
-async fn watch_telegram_channel(
-    _app_state: Arc<AppState>,
-    source: &TelegramChannelSource,
-) -> Result<(), String> {
-    sleep(Duration::from_millis(1)).await;
-    info!("Listen: {0:?}", source.source);
     Ok(())
 }

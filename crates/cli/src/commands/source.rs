@@ -2,7 +2,7 @@ mod add;
 mod remove;
 
 use self::add::{AddCommand, add_source};
-use self::remove::{RmArgs, remove_source};
+use self::remove::{RemoveCommand, remove_source};
 use clap::{Parser, Subcommand};
 use sqlx::SqlitePool;
 use std::error::Error;
@@ -22,11 +22,7 @@ pub struct SourceCommand {
 #[derive(Debug, Subcommand)]
 pub enum SourceCommands {
     Add(AddCommand),
-    #[command(
-        about = "Remove an information source (such as Atom feed or Telegram channel)",
-        visible_aliases = ["rm"]
-    )]
-    Remove(RmArgs),
+    Remove(RemoveCommand),
 }
 
 pub async fn run_source(cmd: SourceCommand) -> Result<(), Box<dyn Error>> {

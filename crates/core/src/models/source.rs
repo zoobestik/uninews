@@ -27,5 +27,5 @@ pub enum SourceType {
 #[sqlx(rename_all = "lowercase")]
 pub enum SourceTypeValue {
     Atom,
-    TelegramChannel,
+    Telegram,
 }

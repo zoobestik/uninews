@@ -53,7 +53,7 @@ impl AppState {
             .await
     }
 
-    pub(crate) async fn storage(&self) -> Result<&Arc<dyn StorageService>, &'static str> {
+    pub async fn storage(&self) -> Result<&Arc<dyn StorageService>, &'static str> {
         self.storage
             .get_or_try_init(|| async {
                 Ok(Arc::new(LiveStorageService::new()) as Arc<dyn StorageService>)

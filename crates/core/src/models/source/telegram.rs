@@ -9,15 +9,18 @@ pub struct TelegramChannelSource {
     pub id: Uuid,
     pub source: SourceTypeValue,
     pub created_at: DateTime<Utc>,
+
+    pub username: String,
 }
 
 impl TelegramChannelSource {
     #[must_use]
-    pub const fn new(id: Uuid, created_at: DateTime<Utc>) -> Self {
+    pub const fn new(id: Uuid, username: String, created_at: DateTime<Utc>) -> Self {
         Self {
             id,
-            source: SourceTypeValue::TelegramChannel,
+            source: SourceTypeValue::Telegram,
             created_at,
+            username,
         }
     }
 }
