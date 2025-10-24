@@ -16,7 +16,7 @@ async fn sanitize_and_convert(
     spawn_blocking(move || {
         let html = sanitizer.clean(&html_dirty).to_string();
         let result = converter
-            .convert(html.as_str())
+            .convert(&html)
             .map_err(|e| format!("Failed to convert HTML to Markdown: {e}"))?;
         Ok(result)
     })

@@ -1,7 +1,8 @@
 #![warn(clippy::all, clippy::pedantic, clippy::nursery)]
 
-pub mod http;
-pub mod news;
-pub mod source;
-pub mod storage;
-pub mod utils;
+pub mod fs;
+pub mod models;
+pub mod parse;
+pub mod repo;
+pub mod services;
+pub mod uuid;

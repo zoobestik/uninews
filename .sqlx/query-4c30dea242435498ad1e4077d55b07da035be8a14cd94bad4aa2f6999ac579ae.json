@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT\n                src.id as \"id: Uuid\"\n            FROM sources src\n            LEFT JOIN\n                source_atom_details atom ON src.id = atom.atom_details_id\n            LEFT JOIN\n                source_telegram_details tg ON src.id = tg.telegram_details_id\n            WHERE\n                atom.url = ? OR tg.username = ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id: Uuid",
+        "ordinal": 0,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4c30dea242435498ad1e4077d55b07da035be8a14cd94bad4aa2f6999ac579ae"
+}

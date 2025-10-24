@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            DELETE FROM sources\n            WHERE id IN (\n                SELECT internal_id\n                FROM uuid_mappings\n                WHERE external_id = $1\n            ) AND source = $2\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "4cca653b99f68b46367698b65611839f3bf9cf625ce5d525eb53e475d7804f13"
+}

@@ -1,43 +1,63 @@
-use crate::configure::try_state_from_file;
-use crate::services::AppServices;
-use crate::source::atom::Atom;
-use crate::source::telegram::TelegramChannel;
-use std::path::Path;
+use sqlx::SqlitePool;
 use std::sync::Arc;
-use uninews_core::source::Source;
+use tokio::sync::OnceCell;
+use uninews_core::fs::get_db_uri;
+use uninews_core::repo::source::SourceRepository;
+use uninews_core::repo::source::sqlite::SqliteSourceRepository;
+use uninews_core::services::http::{HttpService, LiveHttpService};
+use uninews_core::services::news::{LiveNewsService, NewsService};
+use uninews_core::services::storage::{LiveStorageService, StorageService};
 
 pub struct AppState {
-    atoms_channels: Vec<Atom>,
-    telegram_channels: Vec<TelegramChannel>,
+    sources: OnceCell<Arc<dyn SourceRepository>>,
+    news: OnceCell<Arc<dyn NewsService>>,
+    http: OnceCell<Arc<dyn HttpService>>,
+    storage: OnceCell<Arc<dyn StorageService>>,
 }
 
 impl AppState {
-    pub const fn new(atoms_channels: Vec<Atom>, telegram_channels: Vec<TelegramChannel>) -> Self {
+    pub fn new() -> Self {
         Self {
-            atoms_channels,
-            telegram_channels,
+            sources: OnceCell::new(),
+            news: OnceCell::new(),
+            http: OnceCell::new(),
+            storage: OnceCell::new(),
         }
     }
 
-    pub async fn try_from_file(
-        config_path: &Path,
-        app_services: Arc<AppServices>,
-    ) -> Result<Self, String> {
-        let config = try_state_from_file(config_path, app_services).await?;
-        Ok(config)
+    pub async fn sources(&self) -> Result<&Arc<dyn SourceRepository>, String> {
+        self.sources
+            .get_or_try_init(async || {
+                let db_uri = get_db_uri()?;
+
+                let db_pool = SqlitePool::connect(&db_uri)
+                    .await
+                    .map_err(|e| e.to_string())?;
+
+                Ok(Arc::new(SqliteSourceRepository::new(db_pool)) as Arc<dyn SourceRepository>)
+            })
+            .await
     }
 
-    pub fn sources(&self) -> impl Iterator<Item = &dyn Source> {
-        let atom_iter = self
-            .atoms_channels
-            .iter()
-            .map(|atom_source| atom_source as &dyn Source);
+    pub async fn news(&self) -> Result<&Arc<dyn NewsService>, &'static str> {
+        self.news
+            .get_or_try_init(async || Ok(Arc::new(LiveNewsService::new()) as Arc<dyn NewsService>))
+            .await
+    }
 
-        let rss_iter = self
-            .telegram_channels
-            .iter()
-            .map(|rss_source| rss_source as &dyn Source);
+    pub async fn http(&self) -> Result<&Arc<dyn HttpService>, &'static str> {
+        self.http
+            .get_or_try_init(|| async {
+                Ok(Arc::new(LiveHttpService::new()) as Arc<dyn HttpService>)
+            })
+            .await
+    }
 
-        atom_iter.chain(rss_iter)
+    pub async fn storage(&self) -> Result<&Arc<dyn StorageService>, &'static str> {
+        self.storage
+            .get_or_try_init(|| async {
+                Ok(Arc::new(LiveStorageService::new()) as Arc<dyn StorageService>)
+            })
+            .await
     }
 }

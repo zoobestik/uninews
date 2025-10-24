@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO source_telegram_details (telegram_details_id, username)\n            VALUES ($1, $2)\n            ON CONFLICT(username) DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "17b6daf6db1c393e2360da383799dab257799928641387cb4acfb6089fdaceac"
+}
