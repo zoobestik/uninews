@@ -1,4 +1,3 @@
-use super::SourceService;
 use clap::Args;
 use std::error::Error;
 use std::sync::Arc;
@@ -15,7 +14,10 @@ pub struct RmArgs {
     source_type: Option<SourceTypeValue>,
 }
 
-pub async fn remove_source(repo: SourceService, args: RmArgs) -> Result<(), Box<dyn Error>> {
+pub async fn remove_source(
+    repo: Arc<impl SourceRepository>,
+    args: RmArgs,
+) -> Result<(), Box<dyn Error>> {
     match args.source_type {
         Some(source_type) => remove_by_args(repo, source_type, args.url).await?,
         None => remove_by_url(repo, args.url).await?,
@@ -23,7 +25,7 @@ pub async fn remove_source(repo: SourceService, args: RmArgs) -> Result<(), Box<
     Ok(())
 }
 
-async fn remove_by_url(repo: Arc<dyn SourceRepository>, url: Url) -> Result<(), Box<dyn Error>> {
+async fn remove_by_url(repo: Arc<impl SourceRepository>, url: Url) -> Result<(), Box<dyn Error>> {
     let mut ids = repo.find_by_url(url).await?.into_iter();
 
     match (ids.next(), ids.next()) {
@@ -40,7 +42,7 @@ async fn remove_by_url(repo: Arc<dyn SourceRepository>, url: Url) -> Result<(), 
 }
 
 async fn remove_by_args(
-    repo: SourceService,
+    repo: Arc<impl SourceRepository>,
     source_type: SourceTypeValue,
     url: Url,
 ) -> Result<(), Box<dyn Error>> {

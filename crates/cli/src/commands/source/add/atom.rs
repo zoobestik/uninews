@@ -1,8 +1,8 @@
-use super::SourceService;
 use clap::Args;
 use std::error::Error;
+use std::sync::Arc;
 use uninews_core::models::atom::AtomDraft;
-use uninews_core::repo::source::SourceCreate;
+use uninews_core::repo::source::{SourceCreate, SourceRepository};
 use uninews_core::url::parse_url;
 use url::Url;
 
@@ -12,7 +12,10 @@ pub struct AddAtom {
     url: Url,
 }
 
-pub async fn add_atom_source(repo: SourceService, args: AddAtom) -> Result<(), Box<dyn Error>> {
+pub async fn add_atom_source(
+    repo: Arc<impl SourceRepository>,
+    args: AddAtom,
+) -> Result<(), Box<dyn Error>> {
     repo.insert(SourceCreate::Atom(AtomDraft::new(args.url)))
         .await?;
     Ok(())
