@@ -4,13 +4,12 @@ use std::sync::Arc;
 use tracing::info;
 use uninews_core::models::SourceType;
 use uninews_core::repo::source::SourceRepository;
-use uninews_core::repo::source::sqlite::SqliteSourceRepository;
 
 #[derive(Debug, Args)]
 pub struct ArgsList {}
 
 pub async fn list_sources(
-    repo: Arc<SqliteSourceRepository>,
+    repo: Arc<dyn SourceRepository>,
     _args: ArgsList,
 ) -> Result<(), Box<dyn Error>> {
     let sources = repo.find_all_sources().await?;

@@ -60,7 +60,7 @@ async fn read_periodically(
     Ok(news)
 }
 
-static POLL_INTERVAL_SECS: usize = 60;
+const POLL_INTERVAL_SECS: usize = 60;
 
 // @todo: In the `watch_updates` function, there seems to be a potential issue with an infinite loop (`loop`) without any delay or condition. This can cause the service to block resources at high priority and lead to performance degradation. If the loop fails, it could also leave the application in an unstable state.
 pub async fn watch_atom_feed(app_state: Arc<AppState>, source: &AtomSource) -> Result<(), String> {
