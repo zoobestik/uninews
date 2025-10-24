@@ -25,6 +25,7 @@ pub struct SourceCommand {
 pub enum SourceCommands {
     Add(AddCommand),
     Remove(RemoveCommand),
+    #[command(about = "List configured information sources", visible_aliases = ["ls"])]
     List(ArgsList),
 }
 
