@@ -43,6 +43,10 @@ CREATE TABLE IF NOT EXISTS articles
     parent_id  BLOB             NOT NULL, -- UUIDv7
     created_at TEXT             NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
     updated_at TEXT             NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    -- article data
+    title       TEXT NOT NULL,
+    description TEXT NOT NULL,
+    content     TEXT,
     -- metadata
     CONSTRAINT fk_sources_id FOREIGN KEY (parent_id) REFERENCES sources (id) ON DELETE CASCADE
 );

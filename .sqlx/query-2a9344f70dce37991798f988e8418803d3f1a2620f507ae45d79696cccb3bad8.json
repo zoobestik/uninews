@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                SELECT internal_id as \"internal_id: Uuid\" FROM uuid_mappings\n                WHERE external_id IN (?1)\n                ",
+  "describe": {
+    "columns": [
+      {
+        "name": "internal_id: Uuid",
+        "ordinal": 0,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2a9344f70dce37991798f988e8418803d3f1a2620f507ae45d79696cccb3bad8"
+}

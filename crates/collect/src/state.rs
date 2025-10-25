@@ -8,6 +8,19 @@ use uninews_core::services::source::SourceService;
 use uninews_core::services::source::sqlite::SqliteSourceService;
 use uninews_core::services::storage::{LiveStorageService, StorageService};
 
+static DB_POOL: OnceCell<SqlitePool> = OnceCell::const_new();
+
+async fn init_db_pool() -> Result<SqlitePool, String> {
+    DB_POOL
+        .get_or_try_init(|| async {
+            SqlitePool::connect(&get_db_uri()?)
+                .await
+                .map_err(|e| e.to_string())
+        })
+        .await
+        .cloned()
+}
+
 pub struct AppState {
     sources: OnceCell<Arc<dyn SourceService>>,
     news: OnceCell<Arc<dyn NewsService>>,
@@ -28,28 +41,29 @@ impl AppState {
 
     pub async fn sources(&self) -> Result<&Arc<dyn SourceService>, String> {
         self.sources
-            .get_or_try_init(async || {
-                let db_uri = get_db_uri()?;
-
-                let db_pool = SqlitePool::connect(&db_uri)
-                    .await
-                    .map_err(|e| e.to_string())?;
-
-                Ok(Arc::new(SqliteSourceService::new(db_pool)) as Arc<dyn SourceService>)
+            .get_or_try_init(|| async {
+                let pool = init_db_pool().await?;
+                let service: Arc<dyn SourceService> = Arc::new(SqliteSourceService::new(pool));
+                Ok(service)
             })
             .await
     }
 
-    pub async fn news(&self) -> Result<&Arc<dyn NewsService>, &'static str> {
+    pub async fn news(&self) -> Result<&Arc<dyn NewsService>, String> {
         self.news
-            .get_or_try_init(async || Ok(Arc::new(LiveNewsService::new()) as Arc<dyn NewsService>))
+            .get_or_try_init(|| async {
+                let pool = init_db_pool().await?;
+                let service: Arc<dyn NewsService> = Arc::new(LiveNewsService::new(pool));
+                Ok(service)
+            })
             .await
     }
 
     pub async fn http(&self) -> Result<&Arc<dyn HttpService>, &'static str> {
         self.http
             .get_or_try_init(|| async {
-                Ok(Arc::new(LiveHttpService::new()) as Arc<dyn HttpService>)
+                let service: Arc<dyn HttpService> = Arc::new(LiveHttpService::new());
+                Ok(service)
             })
             .await
     }
@@ -57,7 +71,8 @@ impl AppState {
     pub async fn storage(&self) -> Result<&Arc<dyn StorageService>, &'static str> {
         self.storage
             .get_or_try_init(|| async {
-                Ok(Arc::new(LiveStorageService::new()) as Arc<dyn StorageService>)
+                let service: Arc<dyn StorageService> = Arc::new(LiveStorageService::new());
+                Ok(service)
             })
             .await
     }
