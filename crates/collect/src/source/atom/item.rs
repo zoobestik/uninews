@@ -1,7 +1,7 @@
 use crate::utils::html::{html_to_content, html_to_title};
 use async_trait::async_trait;
+use feed_rs::model::Entry;
 use futures::try_join;
-use rss::Item;
 use serde::{Deserialize, Serialize};
 use uninews_core::models::atom::AtomSource;
 use uninews_core::services::news::News;
@@ -14,7 +14,7 @@ pub struct AtomItem {
     parent_id: Uuid,
     source_id: Uuid,
 
-    link: String,
+    link: Option<String>,
     guid: String,
 
     title: String,
@@ -27,49 +27,62 @@ pub struct AtomItem {
 
 pub async fn try_atom_news_from_rss_item(
     source: &AtomSource,
-    item: Item,
+    item: Entry,
 ) -> Result<AtomItem, String> {
-    let link = item
-        .link
-        .clone()
-        .ok_or_else(|| "Missing link for one element".to_string())?;
+    let mut links = item.links;
 
-    let guid = item
-        .guid
-        .clone()
-        .ok_or_else(|| format!("Missing guid for {link}"))?
-        .value;
+    links.sort_by(|a, b| b.href.cmp(&a.href));
+
+    let link = links
+        .iter()
+        .find(|link| !link.href.is_empty())
+        .map(|link| link.href.clone());
+
+    let id = match (item.id.is_empty(), &link) {
+        (false, _) => &item.id,
+        (true, Some(url)) => url,
+        (true, None) => return Err("Item id is empty".to_string()),
+    };
 
     let parent_id = source.id;
-    let source_id = gen_consistent_uuid(&parent_id, &format!("{link}-{guid}"));
+    let source_id = gen_consistent_uuid(&parent_id, id);
 
-    let (title, description, content) = try_join!(
-        html_to_title(item.title.unwrap_or_default()),
-        html_to_content(
-            item.description
-                .ok_or_else(|| format!("Parsing error for {source_id}"))?,
-        ),
-        html_to_content(item.content.unwrap_or_default()),
-    )
-    .map_err(|e| format!("Sanitize error for {source_id}: {e}"))?;
+    let title = item
+        .title
+        .map(|s| s.content)
+        .ok_or_else(|| format!("Title is empty {source_id}"))?;
+
+    let mut description = item
+        .content
+        .and_then(|s| s.body)
+        .and_then(|body| if body.is_empty() { None } else { Some(body) });
+
+    if description.is_none() {
+        description = item
+            .summary
+            .map(|s| s.content)
+            .and_then(|body| if body.is_empty() { None } else { Some(body) });
+    }
+
+    let description = description.ok_or_else(|| format!("Description is empty {source_id}"))?;
+
+    let (title, description) = try_join!(html_to_title(title), html_to_content(description))
+        .map_err(|e| format!("Sanitize error for {source_id}: {e}"))?;
+
+    let published_at = item.published.map(|s| s.to_string());
 
     Ok(AtomItem {
         parent_id,
         source_id,
 
-        guid,
-        link,
-
         title,
         description,
-        image: None,
-        published_at: item.pub_date,
+        content: None,
 
-        content: if content.trim().is_empty() {
-            None
-        } else {
-            Some(content)
-        },
+        guid: item.id,
+        link,
+        image: None,
+        published_at,
     })
 }
 

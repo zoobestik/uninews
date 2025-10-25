@@ -1,9 +1,9 @@
 use crate::source::atom::item::try_atom_news_from_rss_item;
 use crate::state::AppState;
 use async_trait::async_trait;
+use feed_rs::model::Feed;
+use feed_rs::parser;
 use futures::future::try_join_all;
-use rss::Channel;
-use std::io::Cursor;
 use std::sync::Arc;
 use tracing::debug;
 use uninews_core::models::atom::AtomSource;
@@ -21,11 +21,12 @@ impl HttpUpdateHandler for AtomUpdateHandler {
     async fn handle(&self, resp: HttpResponse) -> Result<(), String> {
         let atom_channel = atom_feed_parse(resp).await?;
 
-        self.app_state
-            .storage()
-            .await?
-            .save_raw(self.source.id, &atom_channel.to_string())
-            .await;
+        // @todo: save atom channel or delete it
+        // self.app_state
+        //     .storage()
+        //     .await?
+        //     .save_raw(self.source.id, atom_channel.)
+        //     .await;
 
         let update = atom_items_parse(&self.source, atom_channel).await?;
 
@@ -45,8 +46,8 @@ impl HttpUpdateHandler for AtomUpdateHandler {
     }
 }
 
-async fn atom_items_parse(src: &AtomSource, data: Channel) -> Result<Vec<Arc<dyn News>>, String> {
-    let news_futures = data.items.into_iter().map(async |item| {
+async fn atom_items_parse(src: &AtomSource, data: Feed) -> Result<Vec<Arc<dyn News>>, String> {
+    let news_futures = data.entries.into_iter().map(async |item| {
         let news_item = try_atom_news_from_rss_item(src, item).await?;
         Ok::<Arc<dyn News>, String>(Arc::new(news_item))
     });
@@ -54,12 +55,14 @@ async fn atom_items_parse(src: &AtomSource, data: Channel) -> Result<Vec<Arc<dyn
     try_join_all(news_futures).await
 }
 
-async fn atom_feed_parse(resp: HttpResponse) -> Result<Channel, String> {
-    let xml_text = resp
-        .text()
+async fn atom_feed_parse(response: HttpResponse) -> Result<Feed, String> {
+    let content = response
+        .bytes()
         .await
         .map_err(|e| format!("Failed to get response text: {e}"))?;
 
-    Channel::read_from(Cursor::new(&xml_text))
-        .map_err(|e| format!("Failed to parse feed content: {e}"))
+    let channel =
+        parser::parse(&content[..]).map_err(|e| format!("Failed to parse feed content: {e}"))?;
+
+    Ok(channel)
 }
