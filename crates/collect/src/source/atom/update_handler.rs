@@ -21,8 +21,9 @@ impl HttpUpdateHandler for AtomUpdateHandler {
     async fn handle(&self, resp: HttpResponse) -> Result<(), String> {
         let atom_channel = atom_feed_parse(resp).await?;
 
-        let storage = self.app_state.storage().await?;
-        storage
+        self.app_state
+            .storage()
+            .await?
             .save_raw(self.source.id, &atom_channel.to_string())
             .await;
 

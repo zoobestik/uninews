@@ -14,7 +14,7 @@ use uninews_core::services::source::sqlite::SqliteSourceService;
 
 #[derive(Parser, Debug)]
 #[command(
-    about = "Manage information sources like Atom feeds and Telegram channels",
+    about = "Manage information sources (such as Atom feed or Telegram channel)",
     visible_aliases = ["src"],
 )]
 pub struct SourceCommand {
@@ -24,11 +24,10 @@ pub struct SourceCommand {
 
 #[derive(Debug, Subcommand)]
 pub enum SourceCommands {
-    Add(AddCommand),
-    Remove(RemoveCommand),
-
     #[command(about = "List configured information sources", visible_aliases = ["ls"])]
     List(ArgsList),
+    Add(AddCommand),
+    Remove(RemoveCommand),
 }
 
 pub async fn run_source(cmd: SourceCommand) -> Result<(), Box<dyn Error>> {

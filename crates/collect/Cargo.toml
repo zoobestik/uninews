@@ -17,6 +17,7 @@ clap.workspace = true
 futures.workspace = true
 htmd = { version = "^0.3.2" }
 rss = { version = "^2.0.12" }
+scraper = { version = "^0.24.0", features = ["serde"] }
 serde.workspace = true
 sqlx.workspace = true
 tokio.workspace = true

@@ -16,6 +16,7 @@ pub struct AppState {
 }
 
 impl AppState {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             sources: OnceCell::new(),

@@ -29,6 +29,10 @@ impl LiveHttpService {
 
         debug!("[http_service=\"{0}\"] fetched url", url_str);
 
+        if !response.status().is_success() {
+            return Err(format!("Failed to fetch url: {url_str}"));
+        }
+
         update_handler.handle(response).await
     }
 }

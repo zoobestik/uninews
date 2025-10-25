@@ -7,7 +7,7 @@ pub type HttpResponse = Response;
 
 #[async_trait]
 pub trait HttpUpdateHandler: Send + Sync {
-    async fn handle(&self, message: Response) -> Result<(), String>;
+    async fn handle(&self, response: Response) -> Result<(), String>;
     fn url(&self) -> &Url;
 }
 
