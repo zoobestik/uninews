@@ -2,14 +2,14 @@ use sqlx::SqlitePool;
 use std::sync::Arc;
 use tokio::sync::OnceCell;
 use uninews_core::fs::get_db_uri;
-use uninews_core::repo::source::SourceRepository;
-use uninews_core::repo::source::sqlite::SqliteSourceRepository;
 use uninews_core::services::http::{HttpService, LiveHttpService};
 use uninews_core::services::news::{LiveNewsService, NewsService};
+use uninews_core::services::source::SourceService;
+use uninews_core::services::source::sqlite::SqliteSourceService;
 use uninews_core::services::storage::{LiveStorageService, StorageService};
 
 pub struct AppState {
-    sources: OnceCell<Arc<dyn SourceRepository>>,
+    sources: OnceCell<Arc<dyn SourceService>>,
     news: OnceCell<Arc<dyn NewsService>>,
     http: OnceCell<Arc<dyn HttpService>>,
     storage: OnceCell<Arc<dyn StorageService>>,
@@ -25,7 +25,7 @@ impl AppState {
         }
     }
 
-    pub async fn sources(&self) -> Result<&Arc<dyn SourceRepository>, String> {
+    pub async fn sources(&self) -> Result<&Arc<dyn SourceService>, String> {
         self.sources
             .get_or_try_init(async || {
                 let db_uri = get_db_uri()?;
@@ -34,7 +34,7 @@ impl AppState {
                     .await
                     .map_err(|e| e.to_string())?;
 
-                Ok(Arc::new(SqliteSourceRepository::new(db_pool)) as Arc<dyn SourceRepository>)
+                Ok(Arc::new(SqliteSourceService::new(db_pool)) as Arc<dyn SourceService>)
             })
             .await
     }

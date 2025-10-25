@@ -33,23 +33,18 @@ pub struct CollectCommand {
 /// - Content watching tasks failed
 pub async fn run_collect(_cmd: CollectCommand) -> Result<(), String> {
     let app_state = Arc::new(AppState::new());
-    let sources = app_state.sources().await?.find_all_sources().await?;
+    let sources = app_state.sources().await?.get_all().await?;
 
-    let watchers: Vec<_> = sources
-        .iter()
-        .map(|source| {
-            let app_state = app_state.clone();
-            async move {
-                match source {
-                    SourceType::Atom(src) => watch_atom_feed(app_state, src).await?,
-                    SourceType::TelegramChannel(src) => {
-                        watch_telegram_channel(app_state, src).await?;
-                    }
-                }
-                Ok::<(), String>(())
+    let watchers = sources.into_iter().map(|source| {
+        let app_state = app_state.clone();
+        async move {
+            match source {
+                SourceType::Atom(src) => watch_atom_feed(app_state, src).await?,
+                SourceType::TelegramChannel(src) => watch_telegram_channel(app_state, src).await?,
             }
-        })
-        .collect();
+            Ok::<(), String>(())
+        }
+    });
 
     try_join_all(watchers).await?;
 

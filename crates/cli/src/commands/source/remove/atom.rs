@@ -4,7 +4,7 @@ use std::sync::Arc;
 use uninews_core::models::SourceTypeValue;
 use uninews_core::models::atom::AtomDraft;
 use uninews_core::parse::parse_url;
-use uninews_core::repo::source::SourceRepository;
+use uninews_core::services::source::SourceService;
 use url::Url;
 
 #[derive(Debug, Args)]
@@ -13,11 +13,11 @@ pub struct RemoveAtom {
     url: Url,
 }
 
-pub async fn rm_atom_source(
-    repo: Arc<impl SourceRepository>,
+pub async fn remove_atom_source(
+    sources: Arc<impl SourceService>,
     args: RemoveAtom,
 ) -> Result<(), Box<dyn Error>> {
     let id = AtomDraft::new(args.url).source_id;
-    repo.delete_with_type(id, SourceTypeValue::Atom).await?;
+    sources.delete_with_type(id, SourceTypeValue::Atom).await?;
     Ok(())
 }

@@ -1,4 +1,4 @@
-use super::{AtomDraft, SourceCreate, SourceRepository, TelegramChannelDraft};
+use super::{AtomDraft, SourceCreate, SourceService, TelegramChannelDraft};
 use crate::models::atom::AtomSource;
 use crate::models::telegram::TelegramChannelSource;
 use crate::models::{SourceType, SourceTypeValue};
@@ -12,7 +12,7 @@ use std::ops::Deref;
 use url::Url as UrlLib;
 use uuid::Uuid;
 
-pub struct SqliteSourceRepository {
+pub struct SqliteSourceService {
     db_pool: SqlitePool,
 }
 
@@ -34,7 +34,7 @@ impl<'r> Decode<'r, Sqlite> for Url {
     }
 }
 
-impl SqliteSourceRepository {
+impl SqliteSourceService {
     #[must_use]
     pub const fn new(db_pool: SqlitePool) -> Self {
         Self { db_pool }
@@ -76,7 +76,7 @@ impl TryFrom<SourceQueryResult> for SourceType {
     }
 }
 
-impl SqliteSourceRepository {
+impl SqliteSourceService {
     async fn insert_atom(&self, draft: AtomDraft) -> Result<(), String> {
         let id = Uuid::now_v7();
 
@@ -194,8 +194,17 @@ impl SqliteSourceRepository {
 }
 
 #[async_trait]
-impl SourceRepository for SqliteSourceRepository {
-    async fn find_by_id(&self, id: Uuid) -> Result<SourceType, String> {
+impl SourceService for SqliteSourceService {
+    async fn add(&self, draft: SourceCreate) -> Result<(), String> {
+        match draft {
+            SourceCreate::Atom(draft) => self.insert_atom(draft).await?,
+            SourceCreate::TelegramChannel(draft) => self.insert_telegram_channel(draft).await?,
+        }
+
+        Ok(())
+    }
+
+    async fn get_by_id(&self, id: Uuid) -> Result<SourceType, String> {
         query_as!(
             SourceQueryResult,
             r#"
@@ -224,7 +233,7 @@ impl SourceRepository for SqliteSourceRepository {
         .try_into()
     }
 
-    async fn find_all_sources(&self) -> Result<Vec<SourceType>, String> {
+    async fn get_all(&self) -> Result<Vec<SourceType>, String> {
         let news = query_as!(
             SourceQueryResult,
             r#"
@@ -294,15 +303,6 @@ impl SourceRepository for SqliteSourceRepository {
         if result.rows_affected() == 0 {
             return Err(format!("source {id} not found"));
         }
-        Ok(())
-    }
-
-    async fn insert(&self, draft: SourceCreate) -> Result<(), String> {
-        match draft {
-            SourceCreate::Atom(draft) => self.insert_atom(draft).await?,
-            SourceCreate::TelegramChannel(draft) => self.insert_telegram_channel(draft).await?,
-        }
-
         Ok(())
     }
 }
