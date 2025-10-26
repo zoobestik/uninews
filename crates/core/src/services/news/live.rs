@@ -56,7 +56,7 @@ impl NewsService for LiveNewsService {
                     title = excluded.title,
                     description = excluded.description,
                     content = excluded.content,
-                    updated_at = strftime('%Y-m-%dT%H:%M:%fZ', 'now')
+                    updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
                 WHERE
                     articles.title IS NOT excluded.title OR
                     articles.description IS NOT excluded.description OR
