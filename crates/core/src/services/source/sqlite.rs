@@ -1,4 +1,4 @@
-use super::{AtomDraft, SourceCreate, SourceRepository, TelegramChannelDraft};
+use super::{AtomDraft, SourceCreate, SourceService, TelegramChannelDraft};
 use crate::models::atom::AtomSource;
 use crate::models::telegram::TelegramChannelSource;
 use crate::models::{SourceType, SourceTypeValue};
@@ -12,7 +12,7 @@ use std::ops::Deref;
 use url::Url as UrlLib;
 use uuid::Uuid;
 
-pub struct SqliteSourceRepository {
+pub struct SqliteSourceService {
     db_pool: SqlitePool,
 }
 
@@ -34,7 +34,7 @@ impl<'r> Decode<'r, Sqlite> for Url {
     }
 }
 
-impl SqliteSourceRepository {
+impl SqliteSourceService {
     #[must_use]
     pub const fn new(db_pool: SqlitePool) -> Self {
         Self { db_pool }
@@ -76,11 +76,31 @@ impl TryFrom<SourceQueryResult> for SourceType {
     }
 }
 
-impl SqliteSourceRepository {
+impl SqliteSourceService {
     async fn insert_atom(&self, draft: AtomDraft) -> Result<(), String> {
         let id = Uuid::now_v7();
 
         let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
+
+        let result = query!(
+            r#"
+            INSERT INTO uuid_mappings (internal_id, external_id)
+            VALUES ($1, $2) ON CONFLICT(external_id) DO NOTHING
+            "#,
+            id,
+            draft.source_id,
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        if result.rows_affected() == 0 {
+            tx.rollback().await.map_err(|e| e.to_string())?;
+            return Err(format!(
+                "[atom_feed={0}] mapping {1} already exists",
+                draft.url, draft.source_id
+            ));
+        }
 
         query!(
             r#"
@@ -94,29 +114,12 @@ impl SqliteSourceRepository {
         .await
         .map_err(|e| e.to_string())?;
 
-        let result = query!(
-            r#"
-            INSERT INTO uuid_mappings (internal_id, external_id)
-            VALUES ($1, $2)
-            ON CONFLICT(external_id) DO NOTHING
-            "#,
-            id,
-            draft.source_id,
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| e.to_string())?;
-
         let url = draft.url.as_str();
 
-        if result.rows_affected() == 0 {
-            return Err(format!("[atom_feed={url}] mapping already exists"));
-        }
-
-        query!(
+        let result = query!(
             r#"
             INSERT INTO source_atom_details (atom_details_id, url)
-            VALUES ($1, $2)
+            VALUES ($1, $2) ON CONFLICT(url) DO NOTHING
             "#,
             id,
             url,
@@ -125,15 +128,39 @@ impl SqliteSourceRepository {
         .await
         .map_err(|e| e.to_string())?;
 
+        if result.rows_affected() == 0 {
+            tx.rollback().await.map_err(|e| e.to_string())?;
+            return Err(format!("[atom_feed={url}] mapping already exists"));
+        }
+
         tx.commit().await.map_err(|e| e.to_string())?;
 
         Ok(())
     }
 
     async fn insert_telegram_channel(&self, draft: TelegramChannelDraft) -> Result<(), String> {
+        let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
         let id = Uuid::now_v7();
 
-        let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
+        let result = query!(
+            r#"
+            INSERT INTO uuid_mappings (internal_id, external_id)
+            VALUES ($1, $2) ON CONFLICT(external_id) DO NOTHING
+            "#,
+            id,
+            draft.source_id,
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        if result.rows_affected() == 0 {
+            tx.rollback().await.map_err(|e| e.to_string())?;
+            return Err(format!(
+                "[telegram_channel={0}] mapping {1} already exists",
+                draft.username, draft.source_id
+            ));
+        }
 
         query!(
             r#"
@@ -149,26 +176,6 @@ impl SqliteSourceRepository {
 
         let result = query!(
             r#"
-            INSERT INTO uuid_mappings (internal_id, external_id)
-            VALUES ($1, $2)
-            ON CONFLICT(external_id) DO NOTHING
-            "#,
-            id,
-            draft.source_id,
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| e.to_string())?;
-
-        if result.rows_affected() == 0 {
-            return Err(format!(
-                "[telegram_channel={0}] mapping already exists",
-                draft.username
-            ));
-        }
-
-        let result = query!(
-            r#"
             INSERT INTO source_telegram_details (telegram_details_id, username)
             VALUES ($1, $2)
             ON CONFLICT(username) DO NOTHING
@@ -181,6 +188,7 @@ impl SqliteSourceRepository {
         .map_err(|e| e.to_string())?;
 
         if result.rows_affected() == 0 {
+            tx.rollback().await.map_err(|e| e.to_string())?;
             return Err(format!(
                 "[telegram_channel={0}] username already exists",
                 draft.username
@@ -194,8 +202,17 @@ impl SqliteSourceRepository {
 }
 
 #[async_trait]
-impl SourceRepository for SqliteSourceRepository {
-    async fn find_by_id(&self, id: Uuid) -> Result<SourceType, String> {
+impl SourceService for SqliteSourceService {
+    async fn add(&self, draft: SourceCreate) -> Result<(), String> {
+        match draft {
+            SourceCreate::Atom(draft) => self.insert_atom(draft).await?,
+            SourceCreate::TelegramChannel(draft) => self.insert_telegram_channel(draft).await?,
+        }
+
+        Ok(())
+    }
+
+    async fn get_by_id(&self, id: Uuid) -> Result<SourceType, String> {
         query_as!(
             SourceQueryResult,
             r#"
@@ -224,7 +241,7 @@ impl SourceRepository for SqliteSourceRepository {
         .try_into()
     }
 
-    async fn find_all_sources(&self) -> Result<Vec<SourceType>, String> {
+    async fn get_all(&self) -> Result<Vec<SourceType>, String> {
         let news = query_as!(
             SourceQueryResult,
             r#"
@@ -260,8 +277,12 @@ impl SourceRepository for SqliteSourceRepository {
 
         query!(
             r#"
-            DELETE FROM sources
-            WHERE id = $1
+            DELETE FROM uuid_mappings
+            WHERE internal_id IN (
+                SELECT id
+                FROM sources
+                WHERE id = $1
+            )
             "#,
             id
         )
@@ -274,35 +295,35 @@ impl SourceRepository for SqliteSourceRepository {
         Ok(())
     }
 
-    async fn delete_with_type(&self, id: Uuid, source_type: SourceTypeValue) -> Result<(), String> {
+    async fn delete_with_type(
+        &self,
+        source_id: Uuid,
+        source_type: SourceTypeValue,
+    ) -> Result<(), String> {
+        let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
+
         let result = query!(
             r#"
-            DELETE FROM sources
-            WHERE id IN (
-                SELECT internal_id
-                FROM uuid_mappings
-                WHERE external_id = $1
-            ) AND source = $2
+            DELETE FROM uuid_mappings
+            WHERE external_id = $1 AND internal_id IN (
+                SELECT id
+                FROM sources
+                WHERE source = $2
+            )
             "#,
-            id,
+            source_id,
             source_type,
         )
-        .execute(&self.db_pool)
+        .execute(&mut *tx)
         .await
         .map_err(|e| e.to_string())?;
 
         if result.rows_affected() == 0 {
-            return Err(format!("source {id} not found"));
-        }
-        Ok(())
-    }
-
-    async fn insert(&self, draft: SourceCreate) -> Result<(), String> {
-        match draft {
-            SourceCreate::Atom(draft) => self.insert_atom(draft).await?,
-            SourceCreate::TelegramChannel(draft) => self.insert_telegram_channel(draft).await?,
+            tx.rollback().await.map_err(|e| e.to_string())?;
+            return Err(format!("source {source_id} not found"));
         }
 
+        tx.commit().await.map_err(|e| e.to_string())?;
         Ok(())
     }
 }

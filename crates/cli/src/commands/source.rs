@@ -10,11 +10,11 @@ use sqlx::SqlitePool;
 use std::error::Error;
 use std::sync::Arc;
 use uninews_core::fs::get_db_uri;
-use uninews_core::repo::source::sqlite::SqliteSourceRepository;
+use uninews_core::services::source::sqlite::SqliteSourceService;
 
 #[derive(Parser, Debug)]
 #[command(
-    about = "Manage information sources like Atom feeds and Telegram channels",
+    about = "Manage information sources (such as Atom feed or Telegram channel)",
     visible_aliases = ["src"],
 )]
 pub struct SourceCommand {
@@ -24,19 +24,19 @@ pub struct SourceCommand {
 
 #[derive(Debug, Subcommand)]
 pub enum SourceCommands {
-    Add(AddCommand),
-    Remove(RemoveCommand),
     #[command(about = "List configured information sources", visible_aliases = ["ls"])]
     List(ArgsList),
+    Add(AddCommand),
+    Remove(RemoveCommand),
 }
 
 pub async fn run_source(cmd: SourceCommand) -> Result<(), Box<dyn Error>> {
     let db_pool = SqlitePool::connect(&get_db_uri()?).await?;
-    let source_repo = Arc::new(SqliteSourceRepository::new(db_pool));
+    let source_service = Arc::new(SqliteSourceService::new(db_pool));
 
     match cmd.command {
-        SourceCommands::Add(cmd) => add_source(source_repo, cmd).await,
-        SourceCommands::Remove(cmd) => remove_source(source_repo, cmd).await,
-        SourceCommands::List(args) => list_sources(source_repo, args).await,
+        SourceCommands::Add(cmd) => add_source(source_service, cmd).await,
+        SourceCommands::Remove(cmd) => remove_source(source_service, cmd).await,
+        SourceCommands::List(args) => list_sources(source_service, args).await,
     }
 }

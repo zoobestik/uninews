@@ -1,17 +1,17 @@
 mod atom;
 mod telegram;
 
-use self::atom::{RemoveAtom, rm_atom_source};
-use self::telegram::{RemoveTelegramChannel, rm_telegram_channel_source};
+use self::atom::{RemoveAtom, remove_atom_source};
+use self::telegram::{RemoveTelegramChannel, remove_telegram_channel_source};
 use clap::{Parser, Subcommand};
 use std::error::Error;
 use std::sync::Arc;
-use uninews_core::repo::source::SourceRepository;
+use uninews_core::services::source::SourceService;
 
 #[derive(Parser, Debug)]
 #[command(
-        about = "Remove an information source (such as Atom feed or Telegram channel)",
-        visible_aliases = ["rm"]
+    about = "Remove an information source (such as Atom feed or Telegram channel)",
+    visible_aliases = ["rm"]
 )]
 pub struct RemoveCommand {
     #[command(subcommand)]
@@ -28,11 +28,11 @@ pub enum RemoveCommands {
 }
 
 pub async fn remove_source(
-    repo: Arc<impl SourceRepository>,
+    sources: Arc<impl SourceService>,
     command: RemoveCommand,
 ) -> Result<(), Box<dyn Error>> {
     match command.command {
-        RemoveCommands::Atom(args) => rm_atom_source(repo, args).await,
-        RemoveCommands::Telegram(args) => rm_telegram_channel_source(repo, args).await,
+        RemoveCommands::Atom(args) => remove_atom_source(sources, args).await,
+        RemoveCommands::Telegram(args) => remove_telegram_channel_source(sources, args).await,
     }
 }

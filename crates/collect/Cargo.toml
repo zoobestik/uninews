@@ -14,9 +14,10 @@ version.workspace = true
 ammonia = { version = "^4.1.2" }
 async-trait.workspace = true
 clap.workspace = true
+feed-rs = { version = "^2.3.1", features = ["sanitize"] }
 futures.workspace = true
 htmd = { version = "^0.3.2" }
-rss = { version = "^2.0.12" }
+scraper = { version = "^0.24.0", features = ["serde"] }
 serde.workspace = true
 sqlx.workspace = true
 tokio.workspace = true

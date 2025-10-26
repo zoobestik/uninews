@@ -3,18 +3,18 @@ use std::error::Error;
 use std::sync::Arc;
 use tracing::info;
 use uninews_core::models::SourceType;
-use uninews_core::repo::source::SourceRepository;
+use uninews_core::services::source::SourceService;
 
 #[derive(Debug, Args)]
 pub struct ArgsList {}
 
 pub async fn list_sources(
-    repo: Arc<dyn SourceRepository>,
+    sources: Arc<impl SourceService>,
     _args: ArgsList,
 ) -> Result<(), Box<dyn Error>> {
-    let sources = repo.find_all_sources().await?;
+    let items = sources.get_all().await?;
 
-    for source in sources {
+    for source in items {
         match source {
             SourceType::Atom(src) => info!("Atom/RSS\t= {0}", src.url),
             SourceType::TelegramChannel(src) => info!("Telegram\t= {0}", src.url()?),
