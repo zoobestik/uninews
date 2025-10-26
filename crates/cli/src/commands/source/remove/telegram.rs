@@ -16,9 +16,9 @@ pub async fn remove_telegram_channel_source(
     sources: Arc<impl SourceService>,
     args: RemoveTelegramChannel,
 ) -> Result<(), Box<dyn Error>> {
-    let id = TelegramChannelDraft::new(args.username).source_id;
+    let source_id = TelegramChannelDraft::new(args.username).source_id;
     sources
-        .delete_with_type(id, SourceTypeValue::Telegram)
+        .delete_with_type(source_id, SourceTypeValue::Telegram)
         .await?;
     Ok(())
 }

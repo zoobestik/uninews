@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO uuid_mappings (internal_id, external_id)\n            VALUES ($1, $2) ON CONFLICT(external_id) DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "d8567d63e242f3b1a3198e9726999b3d716ad59e59ed89f9b87999b035b0fe72"
+}

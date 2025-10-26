@@ -82,6 +82,26 @@ impl SqliteSourceService {
 
         let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
 
+        let result = query!(
+            r#"
+            INSERT INTO uuid_mappings (internal_id, external_id)
+            VALUES ($1, $2) ON CONFLICT(external_id) DO NOTHING
+            "#,
+            id,
+            draft.source_id,
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        if result.rows_affected() == 0 {
+            tx.rollback().await.map_err(|e| e.to_string())?;
+            return Err(format!(
+                "[atom_feed={0}] mapping {1} already exists",
+                draft.url, draft.source_id
+            ));
+        }
+
         query!(
             r#"
             INSERT INTO sources (id, source)
@@ -94,29 +114,12 @@ impl SqliteSourceService {
         .await
         .map_err(|e| e.to_string())?;
 
-        let result = query!(
-            r#"
-            INSERT INTO uuid_mappings (internal_id, external_id)
-            VALUES ($1, $2)
-            ON CONFLICT(external_id) DO NOTHING
-            "#,
-            id,
-            draft.source_id,
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| e.to_string())?;
-
         let url = draft.url.as_str();
 
-        if result.rows_affected() == 0 {
-            return Err(format!("[atom_feed={url}] mapping already exists"));
-        }
-
-        query!(
+        let result = query!(
             r#"
             INSERT INTO source_atom_details (atom_details_id, url)
-            VALUES ($1, $2)
+            VALUES ($1, $2) ON CONFLICT(url) DO NOTHING
             "#,
             id,
             url,
@@ -125,15 +128,39 @@ impl SqliteSourceService {
         .await
         .map_err(|e| e.to_string())?;
 
+        if result.rows_affected() == 0 {
+            tx.rollback().await.map_err(|e| e.to_string())?;
+            return Err(format!("[atom_feed={url}] mapping already exists"));
+        }
+
         tx.commit().await.map_err(|e| e.to_string())?;
 
         Ok(())
     }
 
     async fn insert_telegram_channel(&self, draft: TelegramChannelDraft) -> Result<(), String> {
+        let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
         let id = Uuid::now_v7();
 
-        let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
+        let result = query!(
+            r#"
+            INSERT INTO uuid_mappings (internal_id, external_id)
+            VALUES ($1, $2) ON CONFLICT(external_id) DO NOTHING
+            "#,
+            id,
+            draft.source_id,
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        if result.rows_affected() == 0 {
+            tx.rollback().await.map_err(|e| e.to_string())?;
+            return Err(format!(
+                "[telegram_channel={0}] mapping {1} already exists",
+                draft.username, draft.source_id
+            ));
+        }
 
         query!(
             r#"
@@ -149,26 +176,6 @@ impl SqliteSourceService {
 
         let result = query!(
             r#"
-            INSERT INTO uuid_mappings (internal_id, external_id)
-            VALUES ($1, $2)
-            ON CONFLICT(external_id) DO NOTHING
-            "#,
-            id,
-            draft.source_id,
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| e.to_string())?;
-
-        if result.rows_affected() == 0 {
-            return Err(format!(
-                "[telegram_channel={0}] mapping already exists",
-                draft.username
-            ));
-        }
-
-        let result = query!(
-            r#"
             INSERT INTO source_telegram_details (telegram_details_id, username)
             VALUES ($1, $2)
             ON CONFLICT(username) DO NOTHING
@@ -181,6 +188,7 @@ impl SqliteSourceService {
         .map_err(|e| e.to_string())?;
 
         if result.rows_affected() == 0 {
+            tx.rollback().await.map_err(|e| e.to_string())?;
             return Err(format!(
                 "[telegram_channel={0}] username already exists",
                 draft.username
@@ -269,8 +277,12 @@ impl SourceService for SqliteSourceService {
 
         query!(
             r#"
-            DELETE FROM sources
-            WHERE id = $1
+            DELETE FROM uuid_mappings
+            WHERE internal_id IN (
+                SELECT id
+                FROM sources
+                WHERE id = $1
+            )
             "#,
             id
         )
@@ -283,26 +295,35 @@ impl SourceService for SqliteSourceService {
         Ok(())
     }
 
-    async fn delete_with_type(&self, id: Uuid, source_type: SourceTypeValue) -> Result<(), String> {
+    async fn delete_with_type(
+        &self,
+        source_id: Uuid,
+        source_type: SourceTypeValue,
+    ) -> Result<(), String> {
+        let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
+
         let result = query!(
             r#"
-            DELETE FROM sources
-            WHERE id IN (
-                SELECT internal_id
-                FROM uuid_mappings
-                WHERE external_id = $1
-            ) AND source = $2
+            DELETE FROM uuid_mappings
+            WHERE external_id = $1 AND internal_id IN (
+                SELECT id
+                FROM sources
+                WHERE source = $2
+            )
             "#,
-            id,
+            source_id,
             source_type,
         )
-        .execute(&self.db_pool)
+        .execute(&mut *tx)
         .await
         .map_err(|e| e.to_string())?;
 
         if result.rows_affected() == 0 {
-            return Err(format!("source {id} not found"));
+            tx.rollback().await.map_err(|e| e.to_string())?;
+            return Err(format!("source {source_id} not found"));
         }
+
+        tx.commit().await.map_err(|e| e.to_string())?;
         Ok(())
     }
 }

@@ -1,6 +1,6 @@
 use crate::source::telegram::item::TelegramItem;
 use crate::state::AppState;
-use crate::utils::html::html_to_content;
+use crate::utils::html::{html_to_content, html_to_title};
 use async_trait::async_trait;
 use futures::future::try_join_all;
 use scraper::{Html, Selector};
@@ -33,28 +33,41 @@ impl HttpUpdateHandler for TelegramWebUpdateHandler {
             .save_raw(self.source.id, &html_content)
             .await;
 
-        let html_strings: Vec<String> = {
+        // Extract all HTML data first to avoid lifetime issues
+        let extract_data = {
             let document = Html::parse_document(&html_content);
-            let title_selector =
-                Selector::parse(".tgme_widget_message_wrap .tgme_widget_message_text").unwrap();
+            let message_selector = Selector::parse(".tgme_widget_message_wrap").unwrap();
+            let title_selector = Selector::parse(".tgme_widget_message_text").unwrap();
+            let body_selector = Selector::parse(".tgme_widget_message_text").unwrap();
 
             document
-                .select(&title_selector)
-                .map(|element| element.html())
-                .collect()
+                .select(&message_selector)
+                .filter_map(|element| {
+                    let title = element.select(&title_selector).next()?.html();
+                    let body = element.select(&body_selector).next()?.html();
+                    Some((title, body))
+                })
+                .collect::<Vec<(String, String)>>()
         };
 
-        let html_futures = html_strings.into_iter().map(html_to_content);
+        let html_futures = extract_data
+            .into_iter()
+            .map(|(title_html, body_html)| async move {
+                let title_text = html_to_title(title_html).await?;
+                let body_text = html_to_content(body_html).await?;
+                Ok::<(String, String), String>((title_text, body_text))
+            });
 
         let result = try_join_all(html_futures).await?;
 
         let update: Vec<_> = result
             .into_iter()
-            .map(|content| {
+            .map(|(title, description)| {
                 Arc::new(TelegramItem {
                     parent_id: self.source.id,
-                    source_id: gen_consistent_uuid(&self.source.id, &content),
-                    description: content,
+                    source_id: gen_consistent_uuid(&self.source.id, &description),
+                    title,
+                    description,
                 }) as Arc<dyn News>
             })
             .collect();

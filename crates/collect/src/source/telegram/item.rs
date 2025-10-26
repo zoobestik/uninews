@@ -7,6 +7,8 @@ use uuid::Uuid;
 pub struct TelegramItem {
     pub parent_id: Uuid,
     pub source_id: Uuid,
+
+    pub title: String,
     pub description: String,
 }
 
@@ -20,8 +22,8 @@ impl News for TelegramItem {
         self.parent_id
     }
 
-    fn title(&self) -> &'static str {
-        "self.source_id.to_string().as_str()"
+    fn title(&self) -> &str {
+        self.title.as_str()
     }
 
     fn description(&self) -> &str {
