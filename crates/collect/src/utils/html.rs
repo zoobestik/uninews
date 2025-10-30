@@ -8,10 +8,11 @@ static MD2HTML_CONVERTER: LazyLock<Arc<HtmlToMarkdown>> =
     LazyLock::new(|| Arc::new(HtmlToMarkdown::new()));
 
 async fn sanitize_and_convert(
-    html_dirty: String,
+    html_dirty: &str,
     sanitizer: &'static Builder<'static>,
 ) -> Result<String, String> {
     let converter = MD2HTML_CONVERTER.clone();
+    let html_dirty = html_dirty.to_string();
 
     spawn_blocking(move || {
         let html = sanitizer.clean(&html_dirty).to_string();
@@ -38,11 +39,25 @@ pub async fn sanitize_html(html_dirty: &str) -> Result<String, String> {
     let html_owned = html_dirty.to_string();
     spawn_blocking(move || CONTENT_SANITIZER.clean(&html_owned).to_string())
         .await
-        .map_err(|e| format!("Fa HTML to Markdown in block: {e}"))
+        .map_err(|e| format!("Failed to sanitize HTML in block: {e}"))
+}
+
+pub async fn html_to_text(html_dirty: &str) -> Result<String, String> {
+    let html_owned = html_dirty.to_string();
+
+    spawn_blocking(move || {
+        Builder::new()
+            .tags(HashSet::new())
+            .strip_comments(true)
+            .clean(&html_owned)
+            .to_string()
+    })
+    .await
+    .map_err(|e| format!("Failed to sanitize HTML in block: {e}"))
 }
 
 #[allow(dead_code)] // @todo: remove
-pub async fn html_to_content(html_dirty: String) -> Result<String, String> {
+pub async fn html_to_content(html_dirty: &str) -> Result<String, String> {
     sanitize_and_convert(html_dirty, &CONTENT_SANITIZER).await
 }
 
@@ -56,7 +71,7 @@ static TITLE_SANITIZER: LazyLock<Builder<'static>> = LazyLock::new(|| {
 });
 
 #[allow(dead_code)] // @todo: remove
-pub async fn html_to_title(html_dirty: String) -> Result<String, String> {
+pub async fn html_to_title(html_dirty: &str) -> Result<String, String> {
     sanitize_and_convert(html_dirty, &TITLE_SANITIZER).await
 }
 

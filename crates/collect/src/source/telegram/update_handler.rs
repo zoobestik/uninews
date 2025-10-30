@@ -1,11 +1,12 @@
 use crate::source::telegram::item::TelegramItem;
 use crate::state::AppState;
-use crate::utils::html::sanitize_html;
+use crate::utils::html::{html_to_text, sanitize_html};
 use async_trait::async_trait;
-use futures::future::try_join_all;
+use futures::future::{try_join, try_join_all};
 use scraper::{Html, Selector};
 use std::sync::Arc;
 use uninews_core::models::telegram::TelegramChannelSource;
+use uninews_core::parse::truncate_with_dots;
 use uninews_core::services::http::{HttpResponse, HttpUpdateHandler};
 use uninews_core::services::news::News;
 use uninews_core::uuid::gen_consistent_uuid;
@@ -18,6 +19,8 @@ pub struct TelegramWebUpdateHandler {
 
     pub url: Url,
 }
+
+const TITLE_MAX_LENGTH: usize = 100;
 
 #[async_trait]
 impl HttpUpdateHandler for TelegramWebUpdateHandler {
@@ -53,8 +56,9 @@ impl HttpUpdateHandler for TelegramWebUpdateHandler {
         let html_futures = extract_data
             .into_iter()
             .map(|(title_html, body_html)| async move {
-                let title_text = sanitize_html(&title_html).await?;
-                let body_text = sanitize_html(&body_html).await?;
+                let (title_text, body_text) =
+                    try_join(html_to_text(&title_html), sanitize_html(&body_html)).await?;
+                let title_text = truncate_with_dots(&title_text, TITLE_MAX_LENGTH);
                 Ok::<(String, String), String>((title_text, body_text))
             });
 
