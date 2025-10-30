@@ -2,15 +2,16 @@ use super::News;
 use super::service::NewsService;
 use async_trait::async_trait;
 use sqlx::{SqlitePool, query};
+use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::info;
 use uuid::Uuid;
 
-pub struct LiveNewsService {
+pub struct SqliteNewsService {
     db_pool: SqlitePool,
 }
 
-impl LiveNewsService {
+impl SqliteNewsService {
     #[must_use]
     pub const fn new(db_pool: SqlitePool) -> Self {
         Self { db_pool }
@@ -18,9 +19,9 @@ impl LiveNewsService {
 }
 
 #[async_trait]
-impl NewsService for LiveNewsService {
+impl NewsService for SqliteNewsService {
     async fn update_news(&self, news: &[Arc<dyn News>]) -> Result<(), String> {
-        let mut modified: usize = 0;
+        let mut modified: HashMap<Uuid, usize> = HashMap::new();
         let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
 
         for news in news {
@@ -29,11 +30,11 @@ impl NewsService for LiveNewsService {
 
             let result = query!(
                 r#"
-                    INSERT INTO uuid_mappings (internal_id, external_id)
-                    VALUES ($1, $2) ON CONFLICT(external_id) DO UPDATE SET
-                       external_id = $2
-                    RETURNING internal_id
-                    "#,
+                INSERT INTO uuid_mappings (internal_id, external_id)
+                VALUES ($1, $2) ON CONFLICT(external_id) DO UPDATE SET
+                   external_id = $2
+                RETURNING internal_id
+                "#,
                 id,
                 source_id,
             )
@@ -62,7 +63,7 @@ impl NewsService for LiveNewsService {
                     articles.description IS NOT excluded.description OR
                     articles.content IS NOT excluded.content
                 RETURNING
-                    id as "id: Uuid"
+                    parent_id as "parent_id: Uuid"
                 "#,
                 id,
                 parent_id,
@@ -74,15 +75,19 @@ impl NewsService for LiveNewsService {
             .await
             .map_err(|e| e.to_string())?;
 
-            if result.is_some() {
-                modified += 1;
+            if let Some(record) = result {
+                let parent_id = record.parent_id;
+                let numbers = modified.get(&parent_id).unwrap_or(&0) + 1;
+                modified.insert(parent_id, numbers);
             }
         }
 
         tx.commit().await.map_err(|e| e.to_string())?;
 
-        if modified != 0 {
-            info!("[news_service] {0} articles modified", modified);
+        if !modified.is_empty() {
+            for (uuid, modified) in &modified {
+                info!("[news_service={}] {} articles modified", uuid, modified);
+            }
         }
 
         Ok(())

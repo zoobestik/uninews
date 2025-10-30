@@ -1,6 +1,6 @@
 use crate::source::telegram::item::TelegramItem;
 use crate::state::AppState;
-use crate::utils::html::{html_to_content, html_to_title};
+use crate::utils::html::sanitize_html;
 use async_trait::async_trait;
 use futures::future::try_join_all;
 use scraper::{Html, Selector};
@@ -53,8 +53,8 @@ impl HttpUpdateHandler for TelegramWebUpdateHandler {
         let html_futures = extract_data
             .into_iter()
             .map(|(title_html, body_html)| async move {
-                let title_text = html_to_title(title_html).await?;
-                let body_text = html_to_content(body_html).await?;
+                let title_text = sanitize_html(&title_html).await?;
+                let body_text = sanitize_html(&body_html).await?;
                 Ok::<(String, String), String>((title_text, body_text))
             });
 

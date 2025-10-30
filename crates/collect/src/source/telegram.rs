@@ -19,7 +19,7 @@ pub async fn watch_telegram_channel(
     });
 
     info!(
-        "Watch [telegram_channel=\"{0}\"] news",
+        "[telegram_channel=\"{0}\"] watch news",
         update_handler.url.to_string()
     );
     schedule.watch_changes(update_handler).await?;

@@ -14,7 +14,7 @@ pub async fn watch_atom_feed(app_state: Arc<AppState>, source: AtomSource) -> Re
         source,
     });
 
-    info!("Watch [atom_feed=\"{0}\"] news", update_handler.source.url);
+    info!("[atom_feed=\"{0}\"] watch news", update_handler.source.url);
     schedule.watch_changes(update_handler).await?;
 
     Ok(())

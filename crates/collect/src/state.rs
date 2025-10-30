@@ -3,7 +3,7 @@ use std::sync::Arc;
 use tokio::sync::OnceCell;
 use uninews_core::fs::get_db_uri;
 use uninews_core::services::http::{HttpService, LiveHttpService};
-use uninews_core::services::news::{LiveNewsService, NewsService};
+use uninews_core::services::news::{NewsService, SqliteNewsService};
 use uninews_core::services::source::SourceService;
 use uninews_core::services::source::sqlite::SqliteSourceService;
 use uninews_core::services::storage::{LiveStorageService, StorageService};
@@ -53,7 +53,7 @@ impl AppState {
         self.news
             .get_or_try_init(|| async {
                 let pool = init_db_pool().await?;
-                let service: Arc<dyn NewsService> = Arc::new(LiveNewsService::new(pool));
+                let service: Arc<dyn NewsService> = Arc::new(SqliteNewsService::new(pool));
                 Ok(service)
             })
             .await

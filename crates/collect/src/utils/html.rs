@@ -34,6 +34,14 @@ static CONTENT_SANITIZER: LazyLock<Builder<'static>> = LazyLock::new(|| {
     sanitizer
 });
 
+pub async fn sanitize_html(html_dirty: &str) -> Result<String, String> {
+    let html_owned = html_dirty.to_string();
+    spawn_blocking(move || CONTENT_SANITIZER.clean(&html_owned).to_string())
+        .await
+        .map_err(|e| format!("Fa HTML to Markdown in block: {e}"))
+}
+
+#[allow(dead_code)] // @todo: remove
 pub async fn html_to_content(html_dirty: String) -> Result<String, String> {
     sanitize_and_convert(html_dirty, &CONTENT_SANITIZER).await
 }
@@ -47,6 +55,7 @@ static TITLE_SANITIZER: LazyLock<Builder<'static>> = LazyLock::new(|| {
     sanitizer
 });
 
+#[allow(dead_code)] // @todo: remove
 pub async fn html_to_title(html_dirty: String) -> Result<String, String> {
     sanitize_and_convert(html_dirty, &TITLE_SANITIZER).await
 }

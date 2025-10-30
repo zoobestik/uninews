@@ -1,4 +1,4 @@
-use crate::utils::html::{html_to_content, html_to_title};
+use crate::utils::html::sanitize_html;
 use async_trait::async_trait;
 use feed_rs::model::Entry;
 use futures::try_join;
@@ -66,7 +66,7 @@ pub async fn try_atom_news_from_rss_item(
 
     let description = description.ok_or_else(|| format!("Description is empty {source_id}"))?;
 
-    let (title, description) = try_join!(html_to_title(title), html_to_content(description))
+    let (title, description) = try_join!(sanitize_html(&title), sanitize_html(&description))
         .map_err(|e| format!("Sanitize error for {source_id}: {e}"))?;
 
     let published_at = item.published.map(|s| s.to_string());
@@ -102,9 +102,6 @@ impl News for AtomItem {
 
     fn description(&self) -> &str {
         &self.description
-        // html_to_markdown(self.description.clone())
-        //     .await
-        //     .map_err(|e| format!("Parsing error for {0}: {e}", self.source_id))?
     }
 
     fn content(&self) -> &Option<String> {
