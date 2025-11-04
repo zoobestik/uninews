@@ -30,7 +30,7 @@ pub async fn run_commands(command: Commands) {
     };
 
     if let Err(e) = result {
-        eprintln!("{}", e);
+        eprintln!("{e}");
         exit(1);
     }
 }
