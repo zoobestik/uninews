@@ -1,15 +1,15 @@
-use crate::source::telegram::item::TelegramItem;
+use super::item::TelegramItem;
 use crate::state::AppState;
 use crate::utils::html::{html_to_text, sanitize_html};
 use async_trait::async_trait;
 use futures::future::{try_join, try_join_all};
 use scraper::{Html, Selector};
 use std::sync::Arc;
-use uninews_core::models::telegram::TelegramChannelSource;
-use uninews_core::parse::truncate_with_dots;
-use uninews_core::services::http::{HttpResponse, HttpUpdateHandler};
-use uninews_core::services::news::News;
+use uninews_core::models::News;
+use uninews_core::models::source::telegram::TelegramChannelSource;
+use uninews_core::services::{HttpResponse, HttpUpdateHandler};
 use uninews_core::uuid::gen_consistent_uuid;
+use uninews_services::utils::parse::truncate_with_dots;
 use url::Url;
 
 #[allow(dead_code)]

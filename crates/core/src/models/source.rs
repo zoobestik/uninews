@@ -4,7 +4,6 @@ pub mod telegram;
 use self::atom::AtomSource;
 use self::telegram::TelegramChannelSource;
 use async_trait::async_trait;
-use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -22,7 +21,7 @@ pub enum SourceType {
     TelegramChannel(TelegramChannelSource),
 }
 
-#[derive(Debug, Deserialize, Serialize, sqlx::Type, Clone, ValueEnum)]
+#[derive(Debug, Deserialize, Serialize, sqlx::Type, Clone)]
 #[serde(rename_all = "lowercase")]
 #[sqlx(rename_all = "lowercase")]
 pub enum SourceTypeValue {

@@ -6,7 +6,7 @@ use self::telegram::{RemoveTelegramChannel, remove_telegram_channel_source};
 use clap::{Parser, Subcommand};
 use std::error::Error;
 use std::sync::Arc;
-use uninews_core::services::source::SourceService;
+use uninews_core::repos::source::SourceRepository;
 
 #[derive(Parser, Debug)]
 #[command(
@@ -28,7 +28,7 @@ pub enum RemoveCommands {
 }
 
 pub async fn remove_source(
-    sources: Arc<impl SourceService>,
+    sources: Arc<impl SourceRepository>,
     command: RemoveCommand,
 ) -> Result<(), Box<dyn Error>> {
     match command.command {

@@ -25,3 +25,5 @@ $RECYCLE.BIN/
 .Trash-*
 
 /config.toml
+
+.*_reports

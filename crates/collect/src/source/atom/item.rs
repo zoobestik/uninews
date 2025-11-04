@@ -3,8 +3,8 @@ use async_trait::async_trait;
 use feed_rs::model::Entry;
 use futures::try_join;
 use serde::{Deserialize, Serialize};
-use uninews_core::models::atom::AtomSource;
-use uninews_core::services::news::News;
+use uninews_core::models::News;
+use uninews_core::models::source::atom::AtomSource;
 use uninews_core::uuid::gen_consistent_uuid;
 use url::Url;
 use uuid::Uuid;
@@ -91,19 +91,15 @@ impl News for AtomItem {
     fn source_id(&self) -> Uuid {
         self.source_id
     }
-
     fn parent_id(&self) -> Uuid {
         self.parent_id
     }
-
     fn title(&self) -> &str {
         &self.title
     }
-
     fn description(&self) -> &str {
         &self.description
     }
-
     fn content(&self) -> &Option<String> {
         &self.content
     }

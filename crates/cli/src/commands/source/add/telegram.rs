@@ -1,9 +1,10 @@
 use clap::Args;
 use std::error::Error;
 use std::sync::Arc;
-use uninews_core::models::telegram::TelegramChannelDraft;
-use uninews_core::parse::parse_telegram_username;
-use uninews_core::services::source::{SourceCreate, SourceService};
+use uninews_core::models::source::telegram::TelegramChannelDraft;
+use uninews_core::repos::SourceCreate;
+use uninews_core::repos::source::SourceRepository;
+use uninews_services::utils::parse::parse_telegram_username;
 
 #[derive(Debug, Args)]
 pub struct AddTelegramChannel {
@@ -12,7 +13,7 @@ pub struct AddTelegramChannel {
 }
 
 pub async fn add_telegram_channel_source(
-    sources: Arc<impl SourceService>,
+    sources: Arc<impl SourceRepository>,
     args: AddTelegramChannel,
 ) -> Result<(), Box<dyn Error>> {
     sources

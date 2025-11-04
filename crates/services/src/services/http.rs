@@ -1,11 +1,10 @@
-use super::service::HttpService;
-use crate::services::http::HttpUpdateHandler;
 use async_trait::async_trait;
 use reqwest::Client;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{debug, error};
+use uninews_core::services::{HttpService, HttpUpdateHandler};
 
 pub struct LiveHttpService {
     client: Client,

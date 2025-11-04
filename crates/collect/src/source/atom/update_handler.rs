@@ -1,4 +1,4 @@
-use crate::source::atom::item::try_atom_news_from_rss_item;
+use super::item::try_atom_news_from_rss_item;
 use crate::state::AppState;
 use async_trait::async_trait;
 use feed_rs::model::Feed;
@@ -6,9 +6,9 @@ use feed_rs::parser;
 use futures::future::try_join_all;
 use std::sync::Arc;
 use tracing::debug;
-use uninews_core::models::atom::AtomSource;
-use uninews_core::services::http::{HttpResponse, HttpUpdateHandler};
-use uninews_core::services::news::News;
+use uninews_core::models::News;
+use uninews_core::models::source::atom::AtomSource;
+use uninews_core::services::{HttpResponse, HttpUpdateHandler};
 use url::Url;
 
 pub struct AtomUpdateHandler {

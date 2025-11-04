@@ -1,11 +1,11 @@
 mod item;
 mod update_handler;
 
-use crate::source::telegram::update_handler::TelegramWebUpdateHandler;
+use self::update_handler::TelegramWebUpdateHandler;
 use crate::state::AppState;
 use std::sync::Arc;
 use tracing::info;
-use uninews_core::models::telegram::TelegramChannelSource;
+use uninews_core::models::source::telegram::TelegramChannelSource;
 
 pub async fn watch_telegram_channel(
     app_state: Arc<AppState>,

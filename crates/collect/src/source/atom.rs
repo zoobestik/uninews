@@ -1,11 +1,11 @@
 mod item;
 mod update_handler;
 
-use crate::source::atom::update_handler::AtomUpdateHandler;
+use self::update_handler::AtomUpdateHandler;
 use crate::state::AppState;
 use std::sync::Arc;
 use tracing::info;
-use uninews_core::models::atom::AtomSource;
+use uninews_core::models::source::atom::AtomSource;
 
 pub async fn watch_atom_feed(app_state: Arc<AppState>, source: AtomSource) -> Result<(), String> {
     let schedule = app_state.http().await?;

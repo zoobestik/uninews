@@ -4,7 +4,7 @@ use crate::state::AppState;
 use clap::Parser;
 use futures::future::try_join_all;
 use std::sync::Arc;
-use uninews_core::models::SourceType;
+use uninews_core::models::source::SourceType;
 
 #[derive(Parser, Debug)]
 #[command(

@@ -15,12 +15,14 @@ name = "uninews"
 path = "src/main.rs"
 
 [dependencies]
+uninews_collect = { path = "../collect" }
+uninews_core = { path = "../core" }
+uninews_services = { path = "../services" }
+
 clap.workspace = true
 dotenvy.workspace = true
 sqlx.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
-uninews_collect = { path = "../collect" }
-uninews_core = { path = "../core" }
 url.workspace = true

@@ -1,9 +1,10 @@
 use clap::Args;
 use std::error::Error;
 use std::sync::Arc;
-use uninews_core::models::atom::AtomDraft;
-use uninews_core::parse::parse_url;
-use uninews_core::services::source::{SourceCreate, SourceService};
+use uninews_core::models::source::atom::AtomDraft;
+use uninews_core::repos::SourceCreate;
+use uninews_core::repos::source::SourceRepository;
+use uninews_services::utils::parse::parse_url;
 use url::Url;
 
 #[derive(Debug, Args)]
@@ -13,7 +14,7 @@ pub struct AddAtom {
 }
 
 pub async fn add_atom_source(
-    sources: Arc<impl SourceService>,
+    sources: Arc<impl SourceRepository>,
     args: AddAtom,
 ) -> Result<(), Box<dyn Error>> {
     sources

@@ -11,6 +11,9 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
+uninews_core = { path = "../core" }
+uninews_services = { path = "../services" }
+
 ammonia = { version = "^4.1.2" }
 async-trait.workspace = true
 clap.workspace = true
@@ -22,6 +25,5 @@ serde.workspace = true
 sqlx.workspace = true
 tokio.workspace = true
 tracing.workspace = true
-uninews_core = { path = "../core" }
 url.workspace = true
 uuid.workspace = true

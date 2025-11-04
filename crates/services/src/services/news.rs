@@ -1,10 +1,10 @@
-use super::News;
-use super::service::NewsService;
 use async_trait::async_trait;
 use sqlx::{SqlitePool, query};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::info;
+use uninews_core::models::News;
+use uninews_core::services::NewsService;
 use uuid::Uuid;
 
 pub struct SqliteNewsService {

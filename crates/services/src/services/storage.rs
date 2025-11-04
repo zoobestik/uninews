@@ -1,10 +1,10 @@
-use super::service::StorageService;
-use crate::fs::write_to_file;
+use crate::utils::fs::write_to_file;
 use async_trait::async_trait;
 use tracing::error;
+use uninews_core::services::StorageService;
 use uuid::Uuid;
 
-pub struct LiveStorageService {}
+pub struct LiveStorageService;
 
 impl LiveStorageService {
     #[must_use]

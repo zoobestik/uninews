@@ -2739,6 +2739,7 @@ dependencies = [
  "tracing-subscriber",
  "uninews_collect",
  "uninews_core",
+ "uninews_services",
  "url",
 ]
 
@@ -2758,6 +2759,7 @@ dependencies = [
  "tokio",
  "tracing",
  "uninews_core",
+ "uninews_services",
  "url",
  "uuid",
 ]
@@ -2768,13 +2770,23 @@ version = "1.0.0-alpha.1"
 dependencies = [
  "async-trait",
  "chrono",
- "clap",
- "futures",
  "reqwest",
  "serde",
  "sqlx",
+ "url",
+ "uuid",
+]
+
+[[package]]
+name = "uninews_services"
+version = "1.0.0-alpha.1"
+dependencies = [
+ "async-trait",
+ "reqwest",
+ "sqlx",
  "tokio",
  "tracing",
+ "uninews_core",
  "url",
  "uuid",
 ]

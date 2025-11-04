@@ -1,0 +1,15 @@
+[package]
+edition.workspace = true
+name = "uninews_services"
+version.workspace = true
+
+[dependencies]
+uninews_core = { path = "../core" }
+
+async-trait.workspace = true
+reqwest.workspace = true
+sqlx.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+url.workspace = true
+uuid.workspace = true

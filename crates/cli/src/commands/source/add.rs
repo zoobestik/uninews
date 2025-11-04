@@ -6,7 +6,7 @@ use self::telegram::{AddTelegramChannel, add_telegram_channel_source};
 use clap::{Parser, Subcommand};
 use std::error::Error;
 use std::sync::Arc;
-use uninews_core::services::source::SourceService;
+use uninews_core::repos::source::SourceRepository;
 
 #[derive(Parser, Debug)]
 #[command(about = "Add a new information source (such as Atom feed or Telegram channel)")]
@@ -25,7 +25,7 @@ pub enum AddCommands {
 }
 
 pub async fn add_source(
-    sources: Arc<impl SourceService>,
+    sources: Arc<impl SourceRepository>,
     command: AddCommand,
 ) -> Result<(), Box<dyn Error>> {
     match command.command {

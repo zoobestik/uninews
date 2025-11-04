@@ -1,12 +1,12 @@
 use sqlx::SqlitePool;
 use std::sync::Arc;
 use tokio::sync::OnceCell;
-use uninews_core::fs::get_db_uri;
-use uninews_core::services::http::{HttpService, LiveHttpService};
-use uninews_core::services::news::{NewsService, SqliteNewsService};
-use uninews_core::services::source::SourceService;
-use uninews_core::services::source::sqlite::SqliteSourceService;
-use uninews_core::services::storage::{LiveStorageService, StorageService};
+use uninews_core::services::{HttpService, NewsService, SourceService, StorageService};
+use uninews_services::services::http::LiveHttpService;
+use uninews_services::services::news::SqliteNewsService;
+use uninews_services::services::source::SqliteSourceService;
+use uninews_services::services::storage::LiveStorageService;
+use uninews_services::utils::fs::get_db_uri;
 
 static DB_POOL: OnceCell<SqlitePool> = OnceCell::const_new();
 

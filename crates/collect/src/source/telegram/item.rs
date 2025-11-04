@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use uninews_core::services::news::News;
+use uninews_core::models::News;
 use uuid::Uuid;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -17,19 +17,15 @@ impl News for TelegramItem {
     fn source_id(&self) -> Uuid {
         self.source_id
     }
-
     fn parent_id(&self) -> Uuid {
         self.parent_id
     }
-
     fn title(&self) -> &str {
         self.title.as_str()
     }
-
     fn description(&self) -> &str {
         &self.description
     }
-
     fn content(&self) -> &Option<String> {
         &None
     }
