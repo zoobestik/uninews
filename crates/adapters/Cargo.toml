@@ -1,6 +1,13 @@
 [package]
+name = "uninews_adapters"
+
+authors.workspace = true
+description.workspace = true
 edition.workspace = true
-name = "uninews_services"
+homepage.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
 version.workspace = true
 
 [dependencies]

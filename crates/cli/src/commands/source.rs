@@ -9,8 +9,8 @@ use clap::{Parser, Subcommand};
 use sqlx::SqlitePool;
 use std::error::Error;
 use std::sync::Arc;
-use uninews_services::repos::source::SqliteSourceRepository;
-use uninews_services::utils::fs::get_db_uri;
+use uninews_adapters::repos::source::SqliteSourceRepository;
+use uninews_adapters::utils::fs::get_db_uri;
 
 #[derive(Parser, Debug)]
 #[command(

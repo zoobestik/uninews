@@ -1,10 +1,10 @@
 use clap::Args;
 use std::error::Error;
 use std::sync::Arc;
+use uninews_adapters::utils::parse::parse_url;
 use uninews_core::models::source::SourceTypeValue;
 use uninews_core::models::source::atom::AtomDraft;
 use uninews_core::repos::source::SourceRepository;
-use uninews_services::utils::parse::parse_url;
 use url::Url;
 
 #[derive(Debug, Args)]

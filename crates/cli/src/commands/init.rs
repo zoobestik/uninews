@@ -5,7 +5,7 @@ use std::io;
 use std::io::Write;
 use tokio::fs;
 use tracing::info;
-use uninews_services::utils::fs::{create_parent_dirs, get_db_path, to_db_uri};
+use uninews_adapters::utils::fs::{create_parent_dirs, get_db_path, to_db_uri};
 
 #[derive(Parser, Debug)]
 #[command(about = "Initialize application database and create required directories")]
