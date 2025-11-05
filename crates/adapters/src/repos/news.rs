@@ -1,3 +1,4 @@
+use crate::utils::sqlite::tools::upsert_uuid_mapping;
 use async_trait::async_trait;
 use sqlx::{SqlitePool, query};
 use std::collections::HashMap;
@@ -26,24 +27,11 @@ impl NewsRepository for SqliteNewsRepository {
         let mut modified: HashMap<Uuid, usize> = HashMap::new();
 
         for news in news {
-            let id = Uuid::now_v7();
             let source_id = news.source_id();
 
-            let result = query!(
-                r#"
-                INSERT INTO uuid_mappings (internal_id, external_id)
-                VALUES ($1, $2) ON CONFLICT(external_id) DO UPDATE SET
-                   external_id = $2
-                RETURNING internal_id
-                "#,
-                id,
-                source_id,
-            )
-            .fetch_one(&mut *tx)
-            .await
-            .map_err(|e| e.to_string())?;
-
-            let id = result.internal_id;
+            let id = upsert_uuid_mapping(&mut *tx, &source_id)
+                .await
+                .map_err(|e| e.to_string())?;
 
             let parent_id = news.parent_id();
             let title = news.title();

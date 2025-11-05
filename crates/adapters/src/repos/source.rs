@@ -1,4 +1,5 @@
 use crate::utils::sqlite::codecs::Url;
+use crate::utils::sqlite::tools::upsert_uuid_mapping;
 use async_trait::async_trait;
 use sqlx::types::chrono::{DateTime, Utc};
 use sqlx::{FromRow, SqlitePool, query, query_as};
@@ -57,29 +58,11 @@ impl TryFrom<SourceQueryResult> for SourceType {
 
 impl SqliteSourceRepository {
     async fn insert_atom(&self, draft: AtomDraft) -> Result<(), String> {
-        let id = Uuid::now_v7();
-
         let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
 
-        let result = query!(
-            r#"
-            INSERT INTO uuid_mappings (internal_id, external_id)
-            VALUES ($1, $2) ON CONFLICT(external_id) DO NOTHING
-            "#,
-            id,
-            draft.source_id,
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| e.to_string())?;
-
-        if result.rows_affected() == 0 {
-            tx.rollback().await.map_err(|e| e.to_string())?;
-            return Err(format!(
-                "[atom_feed={0}] mapping {1} already exists",
-                draft.url, draft.source_id
-            ));
-        }
+        let id = upsert_uuid_mapping(&mut *tx, &draft.source_id)
+            .await
+            .map_err(|e| e.to_string())?;
 
         query!(
             r#"
@@ -119,27 +102,10 @@ impl SqliteSourceRepository {
 
     async fn insert_telegram_channel(&self, draft: TelegramChannelDraft) -> Result<(), String> {
         let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
-        let id = Uuid::now_v7();
 
-        let result = query!(
-            r#"
-            INSERT INTO uuid_mappings (internal_id, external_id)
-            VALUES ($1, $2) ON CONFLICT(external_id) DO NOTHING
-            "#,
-            id,
-            draft.source_id,
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| e.to_string())?;
-
-        if result.rows_affected() == 0 {
-            tx.rollback().await.map_err(|e| e.to_string())?;
-            return Err(format!(
-                "[telegram_channel={0}] mapping {1} already exists",
-                draft.username, draft.source_id
-            ));
-        }
+        let id = upsert_uuid_mapping(&mut *tx, &draft.source_id)
+            .await
+            .map_err(|e| e.to_string())?;
 
         query!(
             r#"
