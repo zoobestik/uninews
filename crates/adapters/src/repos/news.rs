@@ -3,7 +3,6 @@ use sqlx::{SqlitePool, query};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::info;
-use uninews_core::errors::DomainError;
 use uninews_core::models::News;
 use uninews_core::repos::news::NewsRepository;
 use uuid::Uuid;
@@ -21,13 +20,10 @@ impl SqliteNewsRepository {
 
 #[async_trait]
 impl NewsRepository for SqliteNewsRepository {
-    async fn update_news(&self, news: &[Arc<dyn News>]) -> Result<(), DomainError> {
+    async fn update_news(&self, news: &[Arc<dyn News>]) -> Result<(), String> {
+        let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
+
         let mut modified: HashMap<Uuid, usize> = HashMap::new();
-        let mut tx = self
-            .db_pool
-            .begin()
-            .await
-            .map_err(|e| DomainError::Internal(e.to_string()))?;
 
         for news in news {
             let id = Uuid::now_v7();
@@ -45,7 +41,7 @@ impl NewsRepository for SqliteNewsRepository {
             )
             .fetch_one(&mut *tx)
             .await
-            .map_err(|e| DomainError::Internal(e.to_string()))?;
+            .map_err(|e| e.to_string())?;
 
             let id = result.internal_id;
 
@@ -78,7 +74,7 @@ impl NewsRepository for SqliteNewsRepository {
             )
             .fetch_optional(&mut *tx)
             .await
-            .map_err(|e| DomainError::Internal(e.to_string()))?;
+            .map_err(|e| e.to_string())?;
 
             if let Some(record) = result {
                 let parent_id = record.parent_id;
@@ -87,9 +83,7 @@ impl NewsRepository for SqliteNewsRepository {
             }
         }
 
-        tx.commit()
-            .await
-            .map_err(|e| DomainError::Internal(e.to_string()))?;
+        tx.commit().await.map_err(|e| e.to_string())?;
 
         if !modified.is_empty() {
             for (uuid, modified) in &modified {

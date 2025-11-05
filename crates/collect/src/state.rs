@@ -1,29 +1,17 @@
-use sqlx::SqlitePool;
 use std::sync::Arc;
 use tokio::sync::OnceCell;
+use uninews_adapters::repos::news::SqliteNewsRepository;
+use uninews_adapters::repos::source::SqliteSourceRepository;
 use uninews_adapters::services::http::LiveHttpService;
-use uninews_adapters::services::news::SqliteNewsService;
-use uninews_adapters::services::source::SqliteSourceService;
 use uninews_adapters::services::storage::LiveStorageService;
-use uninews_adapters::utils::fs::get_db_uri;
-use uninews_core::services::{HttpService, NewsService, SourceService, StorageService};
-
-static DB_POOL: OnceCell<SqlitePool> = OnceCell::const_new();
-
-async fn init_db_pool() -> Result<SqlitePool, String> {
-    DB_POOL
-        .get_or_try_init(|| async {
-            SqlitePool::connect(&get_db_uri()?)
-                .await
-                .map_err(|e| e.to_string())
-        })
-        .await
-        .cloned()
-}
+use uninews_adapters::utils::sqlite::tools::init_db_pool;
+use uninews_core::repos::news::NewsRepository;
+use uninews_core::repos::source::SourceRepository;
+use uninews_core::services::{HttpService, StorageService};
 
 pub struct AppState {
-    sources: OnceCell<Arc<dyn SourceService>>,
-    news: OnceCell<Arc<dyn NewsService>>,
+    sources: OnceCell<Arc<dyn SourceRepository>>,
+    news: OnceCell<Arc<dyn NewsRepository>>,
     http: OnceCell<Arc<dyn HttpService>>,
     storage: OnceCell<Arc<dyn StorageService>>,
 }
@@ -39,21 +27,22 @@ impl AppState {
         }
     }
 
-    pub async fn sources(&self) -> Result<&Arc<dyn SourceService>, String> {
+    pub async fn sources(&self) -> Result<&Arc<dyn SourceRepository>, String> {
         self.sources
             .get_or_try_init(|| async {
                 let pool = init_db_pool().await?;
-                let service: Arc<dyn SourceService> = Arc::new(SqliteSourceService::new(pool));
+                let service: Arc<dyn SourceRepository> =
+                    Arc::new(SqliteSourceRepository::new(pool));
                 Ok(service)
             })
             .await
     }
 
-    pub async fn news(&self) -> Result<&Arc<dyn NewsService>, String> {
+    pub async fn news(&self) -> Result<&Arc<dyn NewsRepository>, String> {
         self.news
             .get_or_try_init(|| async {
                 let pool = init_db_pool().await?;
-                let service: Arc<dyn NewsService> = Arc::new(SqliteNewsService::new(pool));
+                let service: Arc<dyn NewsRepository> = Arc::new(SqliteNewsRepository::new(pool));
                 Ok(service)
             })
             .await

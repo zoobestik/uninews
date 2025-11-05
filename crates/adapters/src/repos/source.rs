@@ -1,8 +1,7 @@
-use crate::utils::codecs::Url;
+use crate::utils::sqlite::codecs::Url;
 use async_trait::async_trait;
 use sqlx::types::chrono::{DateTime, Utc};
 use sqlx::{FromRow, SqlitePool, query, query_as};
-use uninews_core::errors::DomainError;
 use uninews_core::models::source::atom::{AtomDraft, AtomSource};
 use uninews_core::models::source::telegram::{TelegramChannelDraft, TelegramChannelSource};
 use uninews_core::models::source::{SourceType, SourceTypeValue};
@@ -33,7 +32,7 @@ struct SourceQueryResult {
 }
 
 impl TryFrom<SourceQueryResult> for SourceType {
-    type Error = DomainError;
+    type Error = String;
 
     fn try_from(source: SourceQueryResult) -> Result<Self, Self::Error> {
         Ok(match source.source {
@@ -42,16 +41,14 @@ impl TryFrom<SourceQueryResult> for SourceType {
                 source.created_at,
                 source
                     .atom_url
-                    .ok_or_else(|| {
-                        DomainError::InvalidInput("Missing URL for Atom source".to_string())
-                    })?
+                    .ok_or_else(|| "Missing URL for Atom source".to_string())?
                     .0,
             )),
             SourceTypeValue::Telegram => Self::TelegramChannel(TelegramChannelSource::new(
                 source.id,
-                source.telegram_username.ok_or_else(|| {
-                    DomainError::InvalidInput("Missing username for Telegram source".to_string())
-                })?,
+                source
+                    .telegram_username
+                    .ok_or_else(|| "Missing username for Telegram source".to_string())?,
                 source.created_at,
             )),
         })
@@ -59,14 +56,10 @@ impl TryFrom<SourceQueryResult> for SourceType {
 }
 
 impl SqliteSourceRepository {
-    async fn insert_atom(&self, draft: AtomDraft) -> Result<(), DomainError> {
+    async fn insert_atom(&self, draft: AtomDraft) -> Result<(), String> {
         let id = Uuid::now_v7();
 
-        let mut tx = self
-            .db_pool
-            .begin()
-            .await
-            .map_err(|e| DomainError::Internal(e.to_string()))?;
+        let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
 
         let result = query!(
             r#"
@@ -78,16 +71,14 @@ impl SqliteSourceRepository {
         )
         .execute(&mut *tx)
         .await
-        .map_err(|e| DomainError::Internal(e.to_string()))?;
+        .map_err(|e| e.to_string())?;
 
         if result.rows_affected() == 0 {
-            tx.rollback()
-                .await
-                .map_err(|e| DomainError::Internal(e.to_string()))?;
-            return Err(DomainError::Conflict(format!(
+            tx.rollback().await.map_err(|e| e.to_string())?;
+            return Err(format!(
                 "[atom_feed={0}] mapping {1} already exists",
                 draft.url, draft.source_id
-            )));
+            ));
         }
 
         query!(
@@ -100,7 +91,7 @@ impl SqliteSourceRepository {
         )
         .execute(&mut *tx)
         .await
-        .map_err(|e| DomainError::Internal(e.to_string()))?;
+        .map_err(|e| e.to_string())?;
 
         let url = draft.url.as_str();
 
@@ -114,33 +105,20 @@ impl SqliteSourceRepository {
         )
         .execute(&mut *tx)
         .await
-        .map_err(|e| DomainError::Internal(e.to_string()))?;
+        .map_err(|e| e.to_string())?;
 
         if result.rows_affected() == 0 {
-            tx.rollback()
-                .await
-                .map_err(|e| DomainError::Internal(e.to_string()))?;
-            return Err(DomainError::Conflict(format!(
-                "[atom_feed={url}] mapping already exists"
-            )));
+            tx.rollback().await.map_err(|e| e.to_string())?;
+            return Err(format!("[atom_feed={url}] mapping already exists"));
         }
 
-        tx.commit()
-            .await
-            .map_err(|e| DomainError::Internal(e.to_string()))?;
+        tx.commit().await.map_err(|e| e.to_string())?;
 
         Ok(())
     }
 
-    async fn insert_telegram_channel(
-        &self,
-        draft: TelegramChannelDraft,
-    ) -> Result<(), DomainError> {
-        let mut tx = self
-            .db_pool
-            .begin()
-            .await
-            .map_err(|e| DomainError::Internal(e.to_string()))?;
+    async fn insert_telegram_channel(&self, draft: TelegramChannelDraft) -> Result<(), String> {
+        let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
         let id = Uuid::now_v7();
 
         let result = query!(
@@ -153,16 +131,14 @@ impl SqliteSourceRepository {
         )
         .execute(&mut *tx)
         .await
-        .map_err(|e| DomainError::Internal(e.to_string()))?;
+        .map_err(|e| e.to_string())?;
 
         if result.rows_affected() == 0 {
-            tx.rollback()
-                .await
-                .map_err(|e| DomainError::Internal(e.to_string()))?;
-            return Err(DomainError::Conflict(format!(
+            tx.rollback().await.map_err(|e| e.to_string())?;
+            return Err(format!(
                 "[telegram_channel={0}] mapping {1} already exists",
                 draft.username, draft.source_id
-            )));
+            ));
         }
 
         query!(
@@ -175,7 +151,7 @@ impl SqliteSourceRepository {
         )
         .execute(&mut *tx)
         .await
-        .map_err(|e| DomainError::Internal(e.to_string()))?;
+        .map_err(|e| e.to_string())?;
 
         let result = query!(
             r#"
@@ -188,21 +164,17 @@ impl SqliteSourceRepository {
         )
         .execute(&mut *tx)
         .await
-        .map_err(|e| DomainError::Internal(e.to_string()))?;
+        .map_err(|e| e.to_string())?;
 
         if result.rows_affected() == 0 {
-            tx.rollback()
-                .await
-                .map_err(|e| DomainError::Internal(e.to_string()))?;
-            return Err(DomainError::Conflict(format!(
+            tx.rollback().await.map_err(|e| e.to_string())?;
+            return Err(format!(
                 "[telegram_channel={0}] username already exists",
                 draft.username
-            )));
+            ));
         }
 
-        tx.commit()
-            .await
-            .map_err(|e| DomainError::Internal(e.to_string()))?;
+        tx.commit().await.map_err(|e| e.to_string())?;
 
         Ok(())
     }
@@ -210,7 +182,7 @@ impl SqliteSourceRepository {
 
 #[async_trait]
 impl SourceRepository for SqliteSourceRepository {
-    async fn add(&self, draft: SourceCreate) -> Result<(), DomainError> {
+    async fn add(&self, draft: SourceCreate) -> Result<(), String> {
         match draft {
             SourceCreate::Atom(draft) => self.insert_atom(draft).await?,
             SourceCreate::TelegramChannel(draft) => self.insert_telegram_channel(draft).await?,
@@ -219,7 +191,7 @@ impl SourceRepository for SqliteSourceRepository {
         Ok(())
     }
 
-    async fn get_by_id(&self, id: Uuid) -> Result<SourceType, DomainError> {
+    async fn get_by_id(&self, id: Uuid) -> Result<SourceType, String> {
         query_as!(
             SourceQueryResult,
             r#"
@@ -243,12 +215,12 @@ impl SourceRepository for SqliteSourceRepository {
         )
         .fetch_optional(&self.db_pool)
         .await
-        .map_err(|e| DomainError::Internal(e.to_string()))?
-        .ok_or_else(|| DomainError::NotFound("Source not found".to_string()))?
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "Source not found".to_string())?
         .try_into()
     }
 
-    async fn get_all(&self) -> Result<Vec<SourceType>, DomainError> {
+    async fn get_all(&self) -> Result<Vec<SourceType>, String> {
         let news = query_as!(
             SourceQueryResult,
             r#"
@@ -269,22 +241,18 @@ impl SourceRepository for SqliteSourceRepository {
         )
         .fetch_all(&self.db_pool)
         .await
-        .map_err(|e| DomainError::Internal(e.to_string()))?;
+        .map_err(|e| e.to_string())?;
 
         let sources = news
             .into_iter()
             .map(TryInto::try_into)
-            .collect::<Result<Vec<SourceType>, DomainError>>()?;
+            .collect::<Result<Vec<SourceType>, String>>()?;
 
         Ok(sources)
     }
 
-    async fn delete_by_id(&self, id: Uuid) -> Result<(), DomainError> {
-        let mut tx = self
-            .db_pool
-            .begin()
-            .await
-            .map_err(|e| DomainError::Internal(e.to_string()))?;
+    async fn delete_by_id(&self, id: Uuid) -> Result<(), String> {
+        let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
 
         query!(
             r#"
@@ -299,11 +267,9 @@ impl SourceRepository for SqliteSourceRepository {
         )
         .execute(&mut *tx)
         .await
-        .map_err(|e| DomainError::Internal(e.to_string()))?;
+        .map_err(|e| e.to_string())?;
 
-        tx.commit()
-            .await
-            .map_err(|e| DomainError::Internal(e.to_string()))?;
+        tx.commit().await.map_err(|e| e.to_string())?;
 
         Ok(())
     }
@@ -312,12 +278,8 @@ impl SourceRepository for SqliteSourceRepository {
         &self,
         source_id: Uuid,
         source_type: SourceTypeValue,
-    ) -> Result<(), DomainError> {
-        let mut tx = self
-            .db_pool
-            .begin()
-            .await
-            .map_err(|e| DomainError::Internal(e.to_string()))?;
+    ) -> Result<(), String> {
+        let mut tx = self.db_pool.begin().await.map_err(|e| e.to_string())?;
 
         let result = query!(
             r#"
@@ -333,20 +295,14 @@ impl SourceRepository for SqliteSourceRepository {
         )
         .execute(&mut *tx)
         .await
-        .map_err(|e| DomainError::Internal(e.to_string()))?;
+        .map_err(|e| e.to_string())?;
 
         if result.rows_affected() == 0 {
-            tx.rollback()
-                .await
-                .map_err(|e| DomainError::Internal(e.to_string()))?;
-            return Err(DomainError::NotFound(format!(
-                "source {source_id} not found"
-            )));
+            tx.rollback().await.map_err(|e| e.to_string())?;
+            return Err(format!("source {source_id} not found"));
         }
 
-        tx.commit()
-            .await
-            .map_err(|e| DomainError::Internal(e.to_string()))?;
+        tx.commit().await.map_err(|e| e.to_string())?;
         Ok(())
     }
 }

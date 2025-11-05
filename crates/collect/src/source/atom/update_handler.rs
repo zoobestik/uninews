@@ -18,6 +18,10 @@ pub struct AtomUpdateHandler {
 
 #[async_trait]
 impl HttpUpdateHandler for AtomUpdateHandler {
+    fn url(&self) -> &Url {
+        &self.source.url
+    }
+
     async fn handle(&self, resp: HttpResponse) -> Result<(), String> {
         let atom_channel = atom_feed_parse(resp).await?;
 
@@ -39,10 +43,6 @@ impl HttpUpdateHandler for AtomUpdateHandler {
         );
 
         Ok(())
-    }
-
-    fn url(&self) -> &Url {
-        &self.source.url
     }
 }
 

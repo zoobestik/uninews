@@ -24,6 +24,10 @@ const TITLE_MAX_LENGTH: usize = 100;
 
 #[async_trait]
 impl HttpUpdateHandler for TelegramWebUpdateHandler {
+    fn url(&self) -> &Url {
+        &self.url
+    }
+
     async fn handle(&self, response: HttpResponse) -> Result<(), String> {
         let html_content = response
             .text()
@@ -79,9 +83,5 @@ impl HttpUpdateHandler for TelegramWebUpdateHandler {
         self.app_state.news().await?.update_news(&update).await?;
 
         Ok(())
-    }
-
-    fn url(&self) -> &Url {
-        &self.url
     }
 }
