@@ -15,12 +15,13 @@ pub struct AddAtom {
 
 pub async fn add_atom_source(sources: Arc<impl SourceRepository>, args: AddAtom) -> Result<()> {
     let draft = AtomDraft::new(args.url);
+    let url = draft.url.to_string();
 
     sources
         .add(Atom(draft))
         .await
-        .context(format!("Failed to add Atom feed: {}", draft.url))?;
+        .context(format!("Failed to add Atom feed: {}", url))?;
 
-    println!("✓ Atom source added successfully: {}", draft.url);
+    println!("✓ Atom source added successfully: {}", url);
     Ok(())
 }

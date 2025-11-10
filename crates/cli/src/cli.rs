@@ -1,10 +1,9 @@
 use crate::commands::{Commands, run_commands};
 use clap::Parser;
-use clap::builder::styling;
 use clap::builder::styling::AnsiColor::{Cyan, Green, Red, Yellow};
 use clap::builder::styling::Effects;
+use clap::builder::styling::Styles;
 use std::process::exit;
-use styling::Styles;
 
 const STYLES: Styles = Styles::styled()
     .header(Green.on_default().effects(Effects::BOLD))
@@ -27,7 +26,7 @@ pub struct Cli {
 }
 
 pub async fn run() {
-    if let Err(e) = run_commands(Cli::parse().command) {
+    if let Err(e) = run_commands(Cli::parse().command).await {
         eprintln!("Error: {:#}", e);
         exit(1);
     }

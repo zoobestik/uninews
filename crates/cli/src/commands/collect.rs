@@ -22,6 +22,7 @@ pub async fn run_collect(_cmd: CollectCommand) -> Result<()> {
         list_sources()
             .await
             .context("Failed to load content sources list")?
+            .into_iter()
             .map(source_watch),
     )
     .await

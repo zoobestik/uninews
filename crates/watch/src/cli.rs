@@ -28,6 +28,7 @@ pub async fn app_state() -> Arc<AppState> {
 /// * The database connection cannot be established
 pub async fn list_sources() -> Result<Vec<SourceEnum>, GetAllError> {
     let app_state = app_state().await;
+
     let sources = app_state
         .sources()
         .await

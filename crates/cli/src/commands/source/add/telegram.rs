@@ -18,12 +18,13 @@ pub async fn add_telegram_source(
     args: AddTelegram,
 ) -> Result<()> {
     let draft = TelegramDraft::new(args.username);
+    let username = &draft.username.to_string();
 
-    sources.add(Telegram(draft)).await.context(format!(
-        "Failed to add Telegram channel: {}",
-        draft.username
-    ))?;
+    sources
+        .add(Telegram(draft))
+        .await
+        .context(format!("Failed to add Telegram channel: {}", username))?;
 
-    println!("✓ Telegram channel added successfully: {}", draft.username);
+    println!("✓ Telegram channel added successfully: {}", username);
     Ok(())
 }

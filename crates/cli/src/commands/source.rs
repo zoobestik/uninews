@@ -29,7 +29,7 @@ pub enum SourceCommands {
 }
 
 pub async fn run_source(cmd: SourceCommand) -> Result<()> {
-    let source_service = Arc::new(SqliteSourceRepository::new());
+    let source_service = Arc::new(SqliteSourceRepository::new().await?);
 
     match cmd.command {
         SourceCommands::Add(cmd) => add_source(source_service, cmd).await,

@@ -50,7 +50,7 @@ pub async fn create_parent_dirs(path: &Path) -> Result<&Path, CreateParentDirsEr
 }
 
 pub fn get_db_path() -> PathBuf {
-    PathBuf::from(var("UNINEWS_DB_PATH").unwrap_or_else(|_| String::from("data/app.db")))
+    PathBuf::from(var("UNINEWS_DB_PATH").unwrap_or_else(|_| String::from("data/app.sqlite")))
 }
 
 #[must_use]

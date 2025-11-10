@@ -21,7 +21,7 @@ pub struct InitCommand {
 }
 
 pub async fn init_app(args: InitCommand) -> Result<()> {
-    let db_path = get_db_path()?;
+    let db_path = get_db_path();
     let db_file = db_path.as_path();
 
     let db_file_exists = try_exists(db_file)
@@ -63,9 +63,9 @@ pub async fn init_app(args: InitCommand) -> Result<()> {
     migrate!("../../migrations")
         .run(&db)
         .await
-        .with_context(|e| format!("Failed to run database migrations: {e}"))?;
+        .context("Failed to run database migrations")?;
 
-    println!("✓ Database initialized at: {}", db_path);
+    println!("✓ Database initialized at: {}", db_path.display());
     println!("✓ All migrations applied successfully");
     Ok(())
 }
