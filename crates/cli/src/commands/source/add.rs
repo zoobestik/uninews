@@ -6,7 +6,6 @@ use self::telegram::{AddTelegram, add_telegram_source};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use news_core::repos::source::SourceRepository;
-use std::error::Error;
 use std::sync::Arc;
 
 #[derive(Parser, Debug)]

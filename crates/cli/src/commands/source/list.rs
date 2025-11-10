@@ -2,7 +2,6 @@ use anyhow::Result;
 use clap::Args;
 use news_core::models::source::SourceEnum::{Atom, Telegram};
 use news_core::repos::source::SourceRepository;
-use std::error::Error;
 use std::sync::Arc;
 use tracing::info;
 

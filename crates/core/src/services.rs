@@ -8,7 +8,8 @@ use url::Url;
 pub type HttpResponse = Response;
 
 #[derive(Error, Debug)]
-pub enum HandleError {}
+#[error(transparent)]
+pub struct HandleError(#[from] pub Internal);
 
 #[async_trait]
 pub trait HttpUpdateHandle: Send + Sync {

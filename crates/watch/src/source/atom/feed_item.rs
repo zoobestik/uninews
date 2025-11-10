@@ -81,7 +81,7 @@ pub async fn try_atom_item_from_entry(
     let title = item
         .title
         .map(|s| s.content)
-        .ok_or_else(|| AtomItemFromEntryError::TitleEmpty(id.to_string()))?;
+        .ok_or_else(|| AtomItemFromEntryError::TitleEmpty(id.clone()))?;
 
     let mut description = item
         .content
@@ -96,7 +96,7 @@ pub async fn try_atom_item_from_entry(
     }
 
     let description =
-        description.ok_or_else(|| AtomItemFromEntryError::DescriptionEmpty(id.to_string()))?;
+        description.ok_or_else(|| AtomItemFromEntryError::DescriptionEmpty(id.clone()))?;
 
     let future_title =
         sanitize_html(&title).map_err(|e| AtomItemFromEntryError::TitleSanitize(e.to_string()));

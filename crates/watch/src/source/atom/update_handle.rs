@@ -19,8 +19,8 @@ pub struct AtomUpdateHandle {
 impl From<AtomFeedParseError> for HandleError {
     fn from(e: AtomFeedParseError) -> Self {
         match e {
-            AtomFeedParseError::GetTextError(e) => todo!(),
-            AtomFeedParseError::ParseError(e) => todo!(),
+            AtomFeedParseError::GetTextError(_e) => todo!(),
+            AtomFeedParseError::ParseError(_e) => todo!(),
         }
     }
 }
@@ -29,10 +29,10 @@ impl From<AtomItemFromEntryError> for HandleError {
     fn from(e: AtomItemFromEntryError) -> Self {
         match e {
             AtomItemFromEntryError::IdEmpty => todo!(),
-            AtomItemFromEntryError::TitleEmpty(e) => todo!(),
-            AtomItemFromEntryError::TitleSanitize(e) => todo!(),
-            AtomItemFromEntryError::DescriptionEmpty(e) => todo!(),
-            AtomItemFromEntryError::DescriptionSanitize(e) => todo!(),
+            AtomItemFromEntryError::TitleEmpty(_e) => todo!(),
+            AtomItemFromEntryError::TitleSanitize(_e) => todo!(),
+            AtomItemFromEntryError::DescriptionEmpty(_e) => todo!(),
+            AtomItemFromEntryError::DescriptionSanitize(_e) => todo!(),
         }
     }
 }
@@ -45,8 +45,12 @@ impl From<StateError> for HandleError {
 
 fn map_news_update_error(e: NewsUpdateError) -> HandleError {
     match e {
-        NewsUpdateError::UpdateItem { id, title, error } => todo!(),
-        NewsUpdateError::Internal(e) => todo!(),
+        NewsUpdateError::UpdateItem {
+            id: _id,
+            title: _title,
+            error: _error,
+        } => todo!(),
+        NewsUpdateError::Internal(_e) => todo!(),
     }
 }
 

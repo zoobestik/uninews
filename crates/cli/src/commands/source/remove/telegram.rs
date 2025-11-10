@@ -4,7 +4,6 @@ use news_core::models::source::SourceType::Telegram;
 use news_core::models::source::telegram::TelegramDraft;
 use news_core::repos::source::SourceRepository;
 use news_sqlite_core::utils::parse::parse_telegram_username;
-use std::error::Error;
 use std::sync::Arc;
 
 #[derive(Debug, Args)]

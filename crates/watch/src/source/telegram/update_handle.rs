@@ -9,22 +9,22 @@ use news_core::uuid::gen_consistent_uuid;
 use std::sync::Arc;
 use url::Url;
 
-#[allow(dead_code)]
 pub struct TelegramWebUpdateHandle {
     pub app_state: Arc<AppState>,
     pub source: TelegramSource,
     pub url: Url,
 }
+
 // ========== Error conversions ==========
 
 impl From<ParseHtmlError> for HandleError {
     fn from(err: ParseHtmlError) -> Self {
         match err {
-            ParseHtmlError::TitleSelector(e) => todo!(),
-            ParseHtmlError::TitleConvert(e) => todo!(),
-            ParseHtmlError::BodySelector(e) => todo!(),
-            ParseHtmlError::BodyConvert(e) => todo!(),
-            ParseHtmlError::MessageSelector(e) => todo!(),
+            ParseHtmlError::TitleSelector(_e) => todo!(),
+            ParseHtmlError::TitleConvert(_e) => todo!(),
+            ParseHtmlError::BodySelector(_e) => todo!(),
+            ParseHtmlError::BodyConvert(_e) => todo!(),
+            ParseHtmlError::MessageSelector(_e) => todo!(),
         }
     }
 }
@@ -41,7 +41,8 @@ impl HttpUpdateHandle for TelegramWebUpdateHandle {
         let html_content = response
             .text()
             .await
-            .map_err(|e| HandleError::from(e.into()))?;
+            .map_err(|e| HandleError(Box::new(e)))?;
+
         let result = parse_html(&html_content).await?;
 
         let update: Vec<_> = result
@@ -60,7 +61,7 @@ impl HttpUpdateHandle for TelegramWebUpdateHandle {
 
         news.update(&update)
             .await
-            .map_err(|e| HandleError::from(e.into()))?;
+            .map_err(|e| HandleError(Box::new(e)))?;
 
         Ok(())
     }

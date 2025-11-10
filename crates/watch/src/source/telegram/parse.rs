@@ -31,24 +31,33 @@ pub async fn parse_html(html_content: &str) -> Result<Vec<(String, String)>, Par
     let body_selector = Selector::parse(".tgme_widget_message_text")
         .map_err(|e| ParseHtmlError::BodySelector(e.to_string()))?;
 
-    let document = Html::parse_document(html_content);
+    let result: Vec<_> = {
+        let document = Html::parse_document(html_content);
 
-    let html_futures = document
-        .select(&message_selector)
-        .filter_map(|element| {
-            let title = element.select(&title_selector).next()?.html();
-            let body = element.select(&body_selector).next()?.html();
-            Some((title, body))
-        })
+        document
+            .select(&message_selector)
+            .filter_map(|element| {
+                let title = element.select(&title_selector).next()?.html();
+                let body = element.select(&body_selector).next()?.html();
+                Some((title, body))
+            })
+            .collect()
+    };
+
+    let html_futures = result
+        .into_iter()
         .map(|(title_html, body_html)| async move {
             let title_text = html_to_text(&title_html)
                 .map_ok(|text| truncate_with_dots(&text, TITLE_MAX_LENGTH))
                 .map_err(ParseHtmlError::TitleConvert);
 
             let body_text = sanitize_html(&body_html).map_err(ParseHtmlError::BodyConvert);
+            let result = try_join(title_text, body_text).await?;
 
-            Ok::<(String, String), ParseHtmlError>(try_join(title_text, body_text).await?)
+            Ok(result)
         });
 
-    Ok(try_join_all(html_futures).await?)
+    let result = try_join_all(html_futures).await?;
+
+    Ok(result)
 }

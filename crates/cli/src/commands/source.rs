@@ -8,7 +8,6 @@ use self::remove::{RemoveCommand, remove_source};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use news_sqlite_core::repos::source::SqliteSourceRepository;
-use std::error::Error;
 use std::sync::Arc;
 
 #[derive(Parser, Debug)]

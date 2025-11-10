@@ -19,6 +19,12 @@ pub struct AppState {
 #[error("failed to initialize {0}")]
 pub struct StateError(#[source] DBInitError);
 
+impl Default for AppState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AppState {
     #[must_use]
     pub fn new() -> Self {

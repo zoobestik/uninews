@@ -18,7 +18,7 @@ pub async fn atom_feed_parse(response: HttpResponse) -> Result<Feed, AtomFeedPar
         .await
         .map_err(|e| AtomFeedParseError::GetTextError(e.to_string()))?;
 
-    let channel = parse(&content[..]).map_err(|e| AtomFeedParseError::ParseError(e))?;
+    let channel = parse(&content[..]).map_err(AtomFeedParseError::ParseError)?;
 
     Ok(channel)
 }

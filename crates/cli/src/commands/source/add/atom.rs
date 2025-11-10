@@ -4,7 +4,6 @@ use news_core::models::source::atom::AtomDraft;
 use news_core::repos::SourceDraft::Atom;
 use news_core::repos::source::SourceRepository;
 use news_sqlite_core::utils::parse::parse_url;
-use std::error::Error;
 use std::sync::Arc;
 use url::Url;
 
