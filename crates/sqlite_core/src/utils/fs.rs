@@ -55,7 +55,7 @@ pub fn get_db_path() -> PathBuf {
 
 #[must_use]
 pub fn to_db_uri(db_file: &Path) -> String {
-    format!("db:{0}?mode=rwc", db_file.display())
+    format!("sqlite:{0}?mode=rwc", db_file.display())
 }
 
 pub fn get_db_uri() -> String {
