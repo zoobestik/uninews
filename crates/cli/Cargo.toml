@@ -21,6 +21,7 @@ news_watch = { path = "../watch" }
 
 anyhow = { version = "^1.0.100" }
 clap.workspace = true
+console = { version = "^0.16.1" }
 dotenvy.workspace = true
 futures.workspace = true
 sqlx.workspace = true

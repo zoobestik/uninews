@@ -1,6 +1,5 @@
-use env::var;
 use fs::{create_dir_all, write};
-use std::env;
+use std::env::var;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 use tokio::fs;
