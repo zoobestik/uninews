@@ -1,5 +1,5 @@
 [package]
-name = "uninews_core"
+name = "news_core"
 
 authors.workspace = true
 description.workspace = true
@@ -16,5 +16,6 @@ chrono.workspace = true
 reqwest.workspace = true
 serde.workspace = true
 sqlx.workspace = true
+thiserror.workspace = true
 url.workspace = true
 uuid.workspace = true

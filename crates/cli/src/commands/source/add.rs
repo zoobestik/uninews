@@ -2,11 +2,12 @@ mod atom;
 mod telegram;
 
 use self::atom::{AddAtom, add_atom_source};
-use self::telegram::{AddTelegramChannel, add_telegram_channel_source};
+use self::telegram::{AddTelegram, add_telegram_source};
+use anyhow::Result;
 use clap::{Parser, Subcommand};
+use news_core::repos::source::SourceRepository;
 use std::error::Error;
 use std::sync::Arc;
-use uninews_core::repos::source::SourceRepository;
 
 #[derive(Parser, Debug)]
 #[command(about = "Add a new information source (such as Atom feed or Telegram channel)")]
@@ -21,15 +22,12 @@ pub enum AddCommands {
     Atom(AddAtom),
 
     #[command(about = "Add new Telegram channel source", visible_aliases=["tg"])]
-    Telegram(AddTelegramChannel),
+    Telegram(AddTelegram),
 }
 
-pub async fn add_source(
-    sources: Arc<impl SourceRepository>,
-    command: AddCommand,
-) -> Result<(), Box<dyn Error>> {
+pub async fn add_source(sources: Arc<impl SourceRepository>, command: AddCommand) -> Result<()> {
     match command.command {
         AddCommands::Atom(args) => add_atom_source(sources, args).await,
-        AddCommands::Telegram(args) => add_telegram_channel_source(sources, args).await,
+        AddCommands::Telegram(args) => add_telegram_source(sources, args).await,
     }
 }

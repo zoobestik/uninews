@@ -1,10 +1,10 @@
+use anyhow::{Context, Result};
 use clap::Args;
-use std::error::Error;
+use news_core::models::source::SourceType::Atom;
+use news_core::models::source::atom::AtomDraft;
+use news_core::repos::source::SourceRepository;
+use news_sqlite_core::utils::parse::parse_url;
 use std::sync::Arc;
-use uninews_adapters::utils::parse::parse_url;
-use uninews_core::models::source::SourceTypeValue;
-use uninews_core::models::source::atom::AtomDraft;
-use uninews_core::repos::source::SourceRepository;
 use url::Url;
 
 #[derive(Debug, Args)]
@@ -16,8 +16,14 @@ pub struct RemoveAtom {
 pub async fn remove_atom_source(
     sources: Arc<impl SourceRepository>,
     args: RemoveAtom,
-) -> Result<(), Box<dyn Error>> {
-    let id = AtomDraft::new(args.url).source_id;
-    sources.delete_with_type(id, SourceTypeValue::Atom).await?;
+) -> Result<()> {
+    let draft = AtomDraft::new(args.url);
+
+    sources
+        .drop_by_id_and_type(draft.source_id, Atom)
+        .await
+        .context(format!("Failed to remove Atom feed: {}", draft.url))?;
+
+    println!("✓ Atom source removed successfully: {}", draft.url);
     Ok(())
 }

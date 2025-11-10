@@ -1,4 +1,5 @@
-use super::SourceTypeValue;
+use super::SourceType;
+use super::SourceType::Atom;
 use crate::uuid::gen_consistent_uuid;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -8,7 +9,7 @@ use uuid::Uuid;
 #[derive(Debug, Deserialize, Serialize)]
 pub struct AtomSource {
     pub id: Uuid,
-    pub source: SourceTypeValue,
+    pub source: SourceType,
     pub created_at: DateTime<Utc>,
 
     pub url: Url,
@@ -20,7 +21,7 @@ impl AtomSource {
         Self {
             id,
             url,
-            source: SourceTypeValue::Atom,
+            source: Atom,
             created_at,
         }
     }

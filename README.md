@@ -34,7 +34,7 @@ RUST_LOG=debug ./target/release/uninews collect
 Alternative (no install):
 
 ```bash
-cargo run -p uninews_cli -- --help
+cargo run -p news_cli -- --help
 ```
 
 To install the binary into your PATH, see [Installation](docs/installation.md).

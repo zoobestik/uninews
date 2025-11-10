@@ -1,21 +1,19 @@
+use anyhow::Result;
 use clap::Args;
+use news_core::models::source::SourceEnum::{Atom, Telegram};
+use news_core::repos::source::SourceRepository;
 use std::error::Error;
 use std::sync::Arc;
 use tracing::info;
-use uninews_core::models::source::SourceType;
-use uninews_core::repos::source::SourceRepository;
 
 #[derive(Debug, Args)]
 pub struct ArgsList {}
 
-pub async fn list_sources(
-    sources: Arc<impl SourceRepository>,
-    _args: ArgsList,
-) -> Result<(), Box<dyn Error>> {
+pub async fn list_sources(sources: Arc<impl SourceRepository>, _args: ArgsList) -> Result<()> {
     for source in sources.get_all().await? {
         match source {
-            SourceType::Atom(src) => info!("Atom/RSS\t= {0}", src.url),
-            SourceType::TelegramChannel(src) => info!("Telegram\t= {0}", src.url()?),
+            Atom(src) => info!("Atom/RSS\t= {0}", src.url),
+            Telegram(src) => info!("Telegram\t= {0}", src.public_url),
         }
     }
     Ok(())

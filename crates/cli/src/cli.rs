@@ -1,17 +1,19 @@
 use crate::commands::{Commands, run_commands};
-use crate::configure::configure;
 use clap::Parser;
 use clap::builder::styling;
-use clap::builder::styling::{AnsiColor, Effects};
+use clap::builder::styling::AnsiColor::{Cyan, Green, Red, Yellow};
+use clap::builder::styling::Effects;
+use std::process::exit;
+use styling::Styles;
 
-const STYLES: styling::Styles = styling::Styles::styled()
-    .header(AnsiColor::Green.on_default().effects(Effects::BOLD))
-    .usage(AnsiColor::Green.on_default().effects(Effects::BOLD))
-    .literal(AnsiColor::Cyan.on_default().effects(Effects::BOLD))
-    // .placeholder(AnsiColor::BrightBlack.on_default())
-    .error(AnsiColor::Red.on_default().effects(Effects::BOLD))
-    .valid(AnsiColor::Cyan.on_default().effects(Effects::BOLD))
-    .invalid(AnsiColor::Yellow.on_default().effects(Effects::BOLD));
+const STYLES: Styles = Styles::styled()
+    .header(Green.on_default().effects(Effects::BOLD))
+    .usage(Green.on_default().effects(Effects::BOLD))
+    .literal(Cyan.on_default().effects(Effects::BOLD))
+    // .placeholder(BrightBlack.on_default())
+    .error(Red.on_default().effects(Effects::BOLD))
+    .valid(Cyan.on_default().effects(Effects::BOLD))
+    .invalid(Yellow.on_default().effects(Effects::BOLD));
 
 #[derive(Parser)]
 #[command(
@@ -25,6 +27,8 @@ pub struct Cli {
 }
 
 pub async fn run() {
-    configure();
-    run_commands(Cli::parse().command).await;
+    if let Err(e) = run_commands(Cli::parse().command) {
+        eprintln!("Error: {:#}", e);
+        exit(1);
+    }
 }

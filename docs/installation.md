@@ -31,10 +31,10 @@ You can also run UniNews without installing a system-wide binary (useful for qui
 
 ```bash
 # From the project root
-cargo run -p uninews_cli -- --help
+cargo run -p news_cli -- --help
 ```
 
-Use it the same way for any command by replacing `uninews` with `cargo run -p uninews_cli --`.
+Use it the same way for any command by replacing `uninews` with `cargo run -p news_cli --`.
 
 ## Environment filters (logging)
 

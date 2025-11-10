@@ -1,4 +1,4 @@
-use uninews_cli::cli;
+use news_cli::cli;
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() {

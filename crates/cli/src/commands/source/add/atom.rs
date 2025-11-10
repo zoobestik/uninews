@@ -1,10 +1,11 @@
+use anyhow::{Context, Result};
 use clap::Args;
+use news_core::models::source::atom::AtomDraft;
+use news_core::repos::SourceDraft::Atom;
+use news_core::repos::source::SourceRepository;
+use news_sqlite_core::utils::parse::parse_url;
 use std::error::Error;
 use std::sync::Arc;
-use uninews_adapters::utils::parse::parse_url;
-use uninews_core::models::source::atom::AtomDraft;
-use uninews_core::repos::SourceCreate;
-use uninews_core::repos::source::SourceRepository;
 use url::Url;
 
 #[derive(Debug, Args)]
@@ -13,12 +14,14 @@ pub struct AddAtom {
     url: Url,
 }
 
-pub async fn add_atom_source(
-    sources: Arc<impl SourceRepository>,
-    args: AddAtom,
-) -> Result<(), Box<dyn Error>> {
+pub async fn add_atom_source(sources: Arc<impl SourceRepository>, args: AddAtom) -> Result<()> {
+    let draft = AtomDraft::new(args.url);
+
     sources
-        .add(SourceCreate::Atom(AtomDraft::new(args.url)))
-        .await?;
+        .add(Atom(draft))
+        .await
+        .context(format!("Failed to add Atom feed: {}", draft.url))?;
+
+    println!("✓ Atom source added successfully: {}", draft.url);
     Ok(())
 }
