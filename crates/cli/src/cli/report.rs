@@ -1,4 +1,4 @@
-use crate::report::{Report as Reporter, ReportMode};
+use crate::report::{ReportFactory, ReportMode, ReportStatus};
 use console::{StyledObject, style};
 use std::time::Instant;
 
@@ -7,8 +7,24 @@ pub const TASK: &str = "→";
 pub const SUCCESS: &str = "✓";
 pub const FAIL: &str = "✗";
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ReportState {
+    Pending,
+    Finished,
+    Failed,
+    Skipped,
+}
+
+impl ReportState {
+    fn is_terminal(&self) -> bool {
+        !matches!(self, Self::Pending)
+    }
+}
+
 pub struct Report {
     start: Instant,
+    state: ReportState,
+
     name: String,
     mode: ReportMode,
     indent: usize,
@@ -22,8 +38,8 @@ impl Report {
     fn start(&self, msg: &str) {
         let result = match self.mode {
             ReportMode::Complex => format!("{}...", msg),
-            ReportMode::ComplexKid => format!("{} {}...", style(TASK).bold().dim(), msg),
-            ReportMode::OneLiner => format!("{} {}", style(TASK).bold().dim(), msg),
+            ReportMode::ComplexKid => format!("{} {}...", style(TASK).dim(), msg),
+            ReportMode::OneLiner => format!("{} {}", style(TASK).dim(), msg),
         };
 
         match self.mode {
@@ -55,41 +71,60 @@ impl Report {
     }
 }
 
-impl Reporter for Report {
-    fn indent(&self) -> usize {
-        self.indent
-    }
-
+impl ReportFactory for Report {
     fn make(name: impl Into<String>, mode: ReportMode, indent: usize) -> Self {
         let report = Self {
             start: Instant::now(),
             name: name.into(),
             mode,
             indent,
+            state: ReportState::Pending,
         };
         report.start(&report.name);
         report
     }
+}
 
-    fn skipped(&self) {
+impl ReportStatus for Report {
+    fn indent(&self) -> usize {
+        self.indent
+    }
+
+    fn skipped(&mut self) {
+        if self.state.is_terminal() {
+            return;
+        }
+
+        self.state = ReportState::Skipped;
+
         let msg = style(" ...skipped").yellow().bold();
 
         println!(
             "{}",
             match self.mode {
                 ReportMode::Complex | ReportMode::ComplexKid => {
-                    format!("{}{} {}", self.indent_str(), self.name, msg,)
+                    format!("{}{} {}", self.indent_str(), self.name, msg)
                 }
                 ReportMode::OneLiner => msg.to_string(),
             }
-        )
+        );
     }
 
-    fn fail(&self) {
-        self.end_in_time(style(FAIL).red().bold())
+    fn fail(&mut self) {
+        if self.state.is_terminal() {
+            return;
+        }
+
+        self.state = ReportState::Failed;
+        self.end_in_time(style(FAIL).red().bold());
     }
 
-    fn finish(&self) {
-        self.end_in_time(style(SUCCESS).green().bold())
+    fn finish(&mut self) {
+        if self.state.is_terminal() {
+            return;
+        }
+
+        self.state = ReportState::Finished;
+        self.end_in_time(style(SUCCESS).green().bold());
     }
 }

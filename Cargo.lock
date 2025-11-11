@@ -1352,6 +1352,7 @@ name = "news_cli"
 version = "1.0.0-alpha.1"
 dependencies = [
  "anyhow",
+ "async-trait",
  "clap",
  "console",
  "dotenvy",
