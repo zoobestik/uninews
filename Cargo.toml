@@ -23,7 +23,7 @@ reqwest = { version = "^0.12.24" }
 serde = { version = "^1.0.228", features = ["derive", "rc"] }
 sqlx = { version = "^0.8.6", default-features = false, features = ["chrono", "derive", "json", "macros", "migrate", "runtime-tokio", "sqlite", "time", "uuid"] }
 thiserror = { version = "^2.0.17" }
-tokio = { version = "^1.47.1", features = ["fs", "macros", "rt-multi-thread"] }
+tokio = { version = "^1.47.1", features = ["fs", "io-std", "macros", "rt-multi-thread"] }
 tracing = { version = "^0.1.41" }
 tracing-subscriber = { version = "^0.3.20", features = ["env-filter", "json"] }
 url = { version = "^2.5.7", features = ["serde"] }
