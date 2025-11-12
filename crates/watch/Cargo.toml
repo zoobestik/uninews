@@ -19,7 +19,9 @@ async-trait.workspace = true
 feed-rs = { version = "^2.3.1", features = ["sanitize"] }
 futures.workspace = true
 htmd = { version = "^0.4.0" }
-scraper = { version = "^0.24.0", features = ["serde"] }
+# ID:  RUSTSEC-2025-0057
+# URL: https://rustsec.org/advisories/RUSTSEC-2025-0057
+scraper = { git = "https://github.com/rust-scraper/scraper.git", rev = "3fca4f1", features = ["serde"] }
 serde.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
