@@ -42,14 +42,18 @@ impl SqliteNewsRepository {
                 INSERT INTO articles (id, parent_id, title, description, content)
                 VALUES ($1, $2, $3, $4, $5)
                 ON CONFLICT(id) DO UPDATE SET
+                    parent_id = excluded.parent_id,
                     title = excluded.title,
                     description = excluded.description,
                     content = excluded.content,
                     updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
                 WHERE
-                    articles.title IS NOT excluded.title OR
-                    articles.description IS NOT excluded.description OR
-                    articles.content IS NOT excluded.content
+                    articles.parent_id != excluded.parent_id OR
+                    articles.title != excluded.title OR
+                    articles.description != excluded.description OR
+                    articles.content IS NOT excluded.content OR
+                    (articles.content IS NULL AND excluded.content IS NOT NULL) OR
+                    (articles.content IS NOT NULL AND excluded.content IS NULL)
                 RETURNING
                     parent_id as "parent_id: Uuid"
                 "#,
