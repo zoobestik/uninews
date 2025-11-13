@@ -28,7 +28,7 @@ pub enum RemoveCommands {
 }
 
 pub async fn remove_source(
-    sources: Arc<impl SourceRepository>,
+    sources: Arc<impl SourceRepository + 'static>,
     command: RemoveCommand,
 ) -> Result<()> {
     match command.command {

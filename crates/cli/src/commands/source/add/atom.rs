@@ -1,3 +1,5 @@
+use crate::cli::report::Report;
+use crate::report::{ReportExt, ReportStatus};
 use anyhow::{Context, Result};
 use clap::Args;
 use news_core::models::source::atom::AtomDraft;
@@ -13,15 +15,24 @@ pub struct AddAtom {
     url: Url,
 }
 
-pub async fn add_atom_source(sources: Arc<impl SourceRepository>, args: AddAtom) -> Result<()> {
-    let draft = AtomDraft::new(args.url);
-    let url = draft.url.to_string();
+pub async fn add_atom_source(
+    sources: Arc<impl SourceRepository + 'static>,
+    args: AddAtom,
+) -> Result<()> {
+    Report::silent(move |task| {
+        Box::pin(async move {
+            let draft = AtomDraft::new(args.url);
+            let url = draft.url.to_string();
 
-    sources
-        .add(Atom(draft))
-        .await
-        .context(format!("Failed to add Atom feed: {}", url))?;
+            sources
+                .add(Atom(draft))
+                .await
+                .context(format!("Failed to add Atom feed: {url}"))?;
 
-    println!("✓ Atom source added successfully: {}", url);
-    Ok(())
+            task.finish_with_text(format!("Atom source added successfully: {url}"));
+
+            Ok(())
+        })
+    })
+    .await
 }

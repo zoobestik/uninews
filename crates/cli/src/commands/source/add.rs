@@ -24,7 +24,10 @@ pub enum AddCommands {
     Telegram(AddTelegram),
 }
 
-pub async fn add_source(sources: Arc<impl SourceRepository>, command: AddCommand) -> Result<()> {
+pub async fn add_source(
+    sources: Arc<impl SourceRepository + 'static>,
+    command: AddCommand,
+) -> Result<()> {
     match command.command {
         AddCommands::Atom(args) => add_atom_source(sources, args).await,
         AddCommands::Telegram(args) => add_telegram_source(sources, args).await,

@@ -1,3 +1,5 @@
+use crate::cli::report::Report;
+use crate::report::{ReportExt, ReportStatus};
 use anyhow::{Context, Result};
 use clap::Args;
 use news_core::models::source::SourceType::Telegram;
@@ -13,23 +15,28 @@ pub struct RemoveTelegram {
 }
 
 pub async fn remove_telegram_source(
-    sources: Arc<impl SourceRepository>,
+    sources: Arc<impl SourceRepository + 'static>,
     args: RemoveTelegram,
 ) -> Result<()> {
-    let draft = TelegramDraft::new(args.username);
+    Report::silent(move |task| {
+        Box::pin(async move {
+            let draft = TelegramDraft::new(args.username);
 
-    sources
-        .drop_by_id_and_type(draft.source_id, Telegram)
-        .await
-        .context(format!(
-            "Failed to remove Telegram channel: {}",
-            draft.username
-        ))?;
+            sources
+                .drop_by_id_and_type(draft.source_id, Telegram)
+                .await
+                .context(format!(
+                    "Failed to remove Telegram channel: {}",
+                    draft.username
+                ))?;
 
-    println!(
-        "✓ Telegram channel removed successfully: {}",
-        draft.username
-    );
+            task.finish_with_text(format!(
+                "✓ Telegram channel removed successfully: {}",
+                draft.username
+            ));
 
-    Ok(())
+            Ok(())
+        })
+    })
+    .await
 }

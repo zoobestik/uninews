@@ -1,3 +1,5 @@
+use crate::cli::report::Report;
+use crate::report::{ReportExt, ReportStatus};
 use SourceDraft::Telegram;
 use anyhow::{Context, Result};
 use clap::Args;
@@ -14,17 +16,22 @@ pub struct AddTelegram {
 }
 
 pub async fn add_telegram_source(
-    sources: Arc<impl SourceRepository>,
+    sources: Arc<impl SourceRepository + 'static>,
     args: AddTelegram,
 ) -> Result<()> {
-    let draft = TelegramDraft::new(args.username);
-    let username = &draft.username.to_string();
+    Report::silent(move |task| {
+        Box::pin(async move {
+            let draft = TelegramDraft::new(args.username);
+            let username = &draft.username.to_string();
 
-    sources
-        .add(Telegram(draft))
-        .await
-        .context(format!("Failed to add Telegram channel: {}", username))?;
+            sources
+                .add(Telegram(draft))
+                .await
+                .context(format!("Failed to add Telegram channel: {}", username))?;
 
-    println!("✓ Telegram channel added successfully: {}", username);
-    Ok(())
+            task.finish_with_text(format!("Telegram channel added successfully: {username}"));
+            Ok(())
+        })
+    })
+    .await
 }

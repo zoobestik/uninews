@@ -64,7 +64,7 @@ async fn create_database_directories(db_path: &Path) -> Result<()> {
 
 async fn connect_and_migrate(db_path: &Path, task_migrate: &Report) -> Result<()> {
     let db = task_migrate
-        .simple("Connecting database", |_| {
+        .sub_oneline("Connecting database", |_| {
             let db_uri = to_db_uri(db_path);
             Box::pin(async move {
                 SqlitePool::connect(&db_uri)
@@ -75,7 +75,7 @@ async fn connect_and_migrate(db_path: &Path, task_migrate: &Report) -> Result<()
         .await?;
 
     task_migrate
-        .simple("Applying database migrations", |_| {
+        .sub_oneline("Applying database migrations", |_| {
             Box::pin(async move {
                 migrate!("../../migrations")
                     .run(&db)
@@ -89,7 +89,7 @@ async fn connect_and_migrate(db_path: &Path, task_migrate: &Report) -> Result<()
 }
 
 pub async fn init_app(args: InitCommand) -> Result<()> {
-    Report::task("Initializing database", |task_main| {
+    Report::complex("Initializing database", |task_main| {
         Box::pin(async move {
             let db_path = get_db_path();
 
@@ -97,13 +97,16 @@ pub async fn init_app(args: InitCommand) -> Result<()> {
                 .await
                 .context("Failed to check if database file exists")?;
 
-            if db_file_exists && !args.force && !confirm_overwrite(&task_main.indent_str()).await? {
+            if db_file_exists
+                && !args.force
+                && !confirm_overwrite(&task_main.with_indent(String::new())).await?
+            {
                 task_main.skipped();
                 return Ok(());
             }
 
             task_main
-                .simple("Removing existing database file", |task_remove| {
+                .sub_oneline("Removing existing database file", |task_remove| {
                     let db_path = db_path.clone();
                     Box::pin(async move {
                         if db_file_exists {
@@ -117,14 +120,14 @@ pub async fn init_app(args: InitCommand) -> Result<()> {
                 .await?;
 
             task_main
-                .simple("Create parent directories", |_| {
+                .sub_oneline("Create parent directories", |_| {
                     let db_path = db_path.clone();
                     Box::pin(async move { create_database_directories(&db_path).await })
                 })
                 .await?;
 
             task_main
-                .complex("Running database migrations", |task_migrate| {
+                .sub_complex("Running database migrations", |task_migrate| {
                     let db_path = db_path.clone();
                     Box::pin(async move { connect_and_migrate(&db_path, task_migrate).await })
                 })
