@@ -1,4 +1,4 @@
-use console::{colors_enabled, style};
+use console::colors_enabled;
 use dotenvy::var;
 use std::sync::OnceLock;
 
@@ -27,20 +27,4 @@ impl OutputConfig {
     pub fn is_verbose() -> bool {
         Self::get().verbose
     }
-}
-
-pub fn success(msg: &str) {
-    println!("{} {}", style("✓").green().bold(), msg);
-}
-
-pub fn info(msg: &str) {
-    println!("{} {}", style("→").cyan(), msg);
-}
-
-pub fn running(msg: &str) {
-    println!("{:>12} {}", style("Running").green().bold(), msg);
-}
-
-pub fn finished(msg: &str) {
-    println!("{:>12} {}", style("Finished").green().bold(), msg);
 }

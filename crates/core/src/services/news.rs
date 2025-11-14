@@ -1,6 +1,7 @@
 use crate::errors::Internal;
 use crate::models::news::News;
 use async_trait::async_trait;
+use std::error::Error;
 use std::sync::Arc;
 use thiserror::Error;
 use uuid::Uuid;
@@ -12,7 +13,7 @@ pub enum UpdateError {
         id: Uuid,
         title: String,
         #[source]
-        error: Box<dyn std::error::Error + Send + Sync>,
+        error: Box<dyn Error + Send + Sync>,
     },
     #[error("Failed to update news: {0}")]
     Internal(Internal),

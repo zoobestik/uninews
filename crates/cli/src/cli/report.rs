@@ -1,3 +1,4 @@
+use crate::cli::output::OutputConfig;
 use crate::report::{ReportFactory, ReportMode, ReportStatus};
 use console::style;
 use std::time::Instant;
@@ -28,6 +29,13 @@ pub struct Report {
     indent: usize,
 }
 
+fn print_task() -> String {
+    match OutputConfig::get().colors_enabled {
+        true => style(TASK).dim().to_string(),
+        false => TASK.to_string(),
+    }
+}
+
 impl Report {
     pub fn with_indent(&self, msg: String) -> String {
         format!("{}{}", INDENT.repeat(self.indent), msg)
@@ -38,12 +46,11 @@ impl Report {
             ReportMode::Complex(msg) => println!("{}", self.with_indent(format!("{}...", msg))),
             ReportMode::ComplexKid(msg) => println!(
                 "{}",
-                self.with_indent(format!("{} {}...", style(TASK).dim(), msg))
+                self.with_indent(format!("{} {}...", print_task(), msg))
             ),
-            ReportMode::OneLiner(msg) => print!(
-                "{}",
-                self.with_indent(format!("{} {}", style(TASK).dim(), msg))
-            ),
+            ReportMode::OneLiner(msg) => {
+                print!("{}", self.with_indent(format!("{} {}", print_task(), msg)))
+            }
             ReportMode::Silent => {}
         };
     }
@@ -108,7 +115,10 @@ impl ReportStatus for Report {
             s => format!(" {}", s),
         };
 
-        let msg = style(" ...skipped").yellow().bold();
+        let msg = match OutputConfig::get().colors_enabled {
+            true => style(" ...skipped").yellow().bold().to_string(),
+            false => " ...skipped".to_string(),
+        };
 
         match &self.mode {
             ReportMode::OneLiner(_) => println!("{}{}", text, msg),
@@ -130,7 +140,10 @@ impl ReportStatus for Report {
         }
 
         self.state = ReportState::Failed;
-        self.end_in_time(style(FAIL).red().bold().to_string());
+        self.end_in_time(match OutputConfig::get().colors_enabled {
+            true => style(FAIL).red().bold().to_string(),
+            false => FAIL.to_string(),
+        });
     }
 
     fn finish(&mut self) {
@@ -148,6 +161,11 @@ impl ReportStatus for Report {
         };
 
         self.state = ReportState::Finished;
-        self.end_in_time(style(SUCCESS).green().bold().to_string() + &text);
+        self.end_in_time(
+            match OutputConfig::get().colors_enabled {
+                true => style(SUCCESS).green().bold().to_string(),
+                false => SUCCESS.to_string(),
+            } + &text,
+        );
     }
 }

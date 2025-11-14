@@ -41,6 +41,12 @@ pub struct SqliteSourceService {
     uuid_repo: SqliteUuidService,
 }
 
+impl From<SqlxServiceError> for AddError {
+    fn from(e: SqlxServiceError) -> Self {
+        AddError::Internal(Box::new(e))
+    }
+}
+
 impl SqliteSourceService {
     pub async fn try_new() -> Result<Self, DBInitError> {
         let (db_pool, uuid_repo) = try_join!(init_db_pool(), SqliteUuidService::init_lazy())?;
@@ -72,17 +78,20 @@ impl SqliteSourceService {
         ))
     }
 
-    async fn insert_atom(&self, draft: AtomDraft) -> Result<(), SqlxServiceError> {
+    async fn insert_atom(&self, draft: AtomDraft) -> Result<(), AddError> {
         let uuid_repo = &self.uuid_repo;
         let mut tx = self.db_pool.begin().await.map_err(Transaction)?;
 
         let url = draft.url.as_str();
+        let source_key = ExternalEntity::source_key(&draft);
         let upsert_id = uuid_repo
-            .upsert_uuid_mapping(&mut tx, SourceAtom, ExternalEntity::source_key(&draft))
+            .upsert_uuid_mapping(&mut tx, SourceAtom, source_key)
             .await?;
 
         match upsert_id {
-            UpsertMapping::Existing(_) => return Ok(()),
+            UpsertMapping::Existing(_) => {
+                return Err(AddError::AlreadyExists(source_key.to_string()));
+            }
             UpsertMapping::New(id) => {
                 query!(
                     r#"
@@ -123,16 +132,20 @@ impl SqliteSourceService {
         Ok(())
     }
 
-    async fn insert_telegram_channel(&self, draft: TelegramDraft) -> Result<(), SqlxServiceError> {
+    async fn insert_telegram_channel(&self, draft: TelegramDraft) -> Result<(), AddError> {
         let mut tx = self.db_pool.begin().await.map_err(Transaction)?;
+
+        let source_key = ExternalEntity::source_key(&draft);
 
         let upsert_id = self
             .uuid_repo
-            .upsert_uuid_mapping(&mut tx, SourceTelegram, draft.username.as_str())
+            .upsert_uuid_mapping(&mut tx, SourceTelegram, source_key)
             .await?;
 
         match upsert_id {
-            UpsertMapping::Existing(_) => return Ok(()),
+            UpsertMapping::Existing(_) => {
+                return Err(AddError::AlreadyExists(source_key.to_string()));
+            }
             UpsertMapping::New(id) => {
                 let username = draft.username;
 
@@ -222,8 +235,7 @@ impl SourceService for SqliteSourceService {
         Ok(match draft {
             SourceDraft::Atom(draft) => self.insert_atom(draft).await,
             SourceDraft::Telegram(draft) => self.insert_telegram_channel(draft).await,
-        }
-        .map_err(|e| AddError(Box::new(e)))?)
+        }?)
     }
 
     async fn get_by_id(&self, id: Uuid) -> Result<SourceEnum, GetError> {

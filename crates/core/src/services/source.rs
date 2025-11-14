@@ -11,18 +11,14 @@ pub enum SourceDraft {
     Telegram(TelegramDraft),
 }
 
-impl SourceDraft {
-    pub fn source_key(&self) -> &str {
-        match self {
-            Self::Atom(draft) => draft.url.as_str(),
-            Self::Telegram(draft) => draft.username.as_str(),
-        }
-    }
-}
-
 #[derive(Error, Debug)]
-#[error(transparent)]
-pub struct AddError(#[from] pub Internal);
+pub enum AddError {
+    #[error("Source with source_key={0} already exists")]
+    AlreadyExists(String),
+
+    #[error(transparent)]
+    Internal(#[from] Internal),
+}
 
 #[derive(Error, Debug)]
 pub enum GetError {

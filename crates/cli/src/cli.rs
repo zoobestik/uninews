@@ -1,8 +1,8 @@
 mod errors;
-pub mod output;
+pub(crate) mod output;
 pub mod report;
 
-use self::output::OutputConfig;
+use crate::cli::output::OutputConfig;
 use crate::commands::{Commands, run_commands};
 use clap::Parser;
 use clap::builder::styling::AnsiColor::{Cyan, Green, Red, Yellow};

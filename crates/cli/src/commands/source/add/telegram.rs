@@ -4,8 +4,8 @@ use SourceDraft::Telegram;
 use anyhow::{Context, Result};
 use clap::Args;
 use news_core::models::source::telegram::TelegramDraft;
-use news_core::services::source::SourceDraft;
 use news_core::services::source::SourceService;
+use news_core::services::source::{AddError, SourceDraft};
 use news_sqlite_core::utils::parse::parse_telegram_username;
 use std::sync::Arc;
 
@@ -24,12 +24,17 @@ pub async fn add_telegram_source(
             let draft = TelegramDraft::new(args.username);
             let username = &draft.username.to_string();
 
-            sources
-                .add(Telegram(draft))
-                .await
-                .context(format!("Failed to add Telegram channel: {username}"))?;
+            let result = sources.add(Telegram(draft)).await;
 
-            task.finish_with_text(format!("Telegram channel added successfully: {username}"));
+            match result {
+                Ok(()) => task
+                    .finish_with_text(format!("Telegram channel added successfully: {username}")),
+                Err(AddError::AlreadyExists(source_key)) => {
+                    task.finish_with_text(format!("Telegram channel {source_key} already exists"))
+                }
+                Err(_) => result.context(format!("Failed to add Telegram channel: {username}"))?,
+            }
+
             Ok(())
         })
     })
