@@ -2,9 +2,9 @@ use crate::cli::report::Report;
 use crate::report::{ReportExt, ReportStatus};
 use anyhow::{Context, Result};
 use clap::Args;
-use news_core::models::source::SourceType::Atom;
 use news_core::models::source::atom::AtomDraft;
-use news_core::repos::source::SourceRepository;
+use news_core::services::source::SourceDraft;
+use news_core::services::source::SourceService;
 use news_sqlite_core::utils::parse::parse_url;
 use std::sync::Arc;
 use url::Url;
@@ -16,7 +16,7 @@ pub struct RemoveAtom {
 }
 
 pub async fn remove_atom_source(
-    sources: Arc<impl SourceRepository + 'static>,
+    sources: Arc<impl SourceService + 'static>,
     args: RemoveAtom,
 ) -> Result<()> {
     Report::silent(move |task| {
@@ -25,7 +25,7 @@ pub async fn remove_atom_source(
             let url = draft.url.to_string();
 
             sources
-                .drop_by_id_and_type(draft.source_id, Atom)
+                .drop_by_draft(SourceDraft::Atom(draft))
                 .await
                 .context(format!("Failed to remove Atom feed: {url}"))?;
 

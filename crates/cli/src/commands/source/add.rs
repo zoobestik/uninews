@@ -5,7 +5,7 @@ use self::atom::{AddAtom, add_atom_source};
 use self::telegram::{AddTelegram, add_telegram_source};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use news_core::repos::source::SourceRepository;
+use news_core::services::source::SourceService;
 use std::sync::Arc;
 
 #[derive(Parser, Debug)]
@@ -25,7 +25,7 @@ pub enum AddCommands {
 }
 
 pub async fn add_source(
-    sources: Arc<impl SourceRepository + 'static>,
+    sources: Arc<impl SourceService + 'static>,
     command: AddCommand,
 ) -> Result<()> {
     match command.command {

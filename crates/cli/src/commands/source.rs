@@ -7,7 +7,7 @@ use self::list::{ArgsList, list_sources};
 use self::remove::{RemoveCommand, remove_source};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use news_sqlite_core::repos::source::SqliteSourceRepository;
+use news_sqlite_core::services::source::SqliteSourceService;
 use std::sync::Arc;
 
 #[derive(Parser, Debug)]
@@ -29,7 +29,7 @@ pub enum SourceCommands {
 }
 
 pub async fn run_source(cmd: SourceCommand) -> Result<()> {
-    let source_service = Arc::new(SqliteSourceRepository::new().await?);
+    let source_service = Arc::new(SqliteSourceService::try_new().await?);
 
     match cmd.command {
         SourceCommands::Add(cmd) => add_source(source_service, cmd).await,

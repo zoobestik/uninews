@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                    INSERT INTO source_telegram_details (telegram_details_id, username)\n                    VALUES ($1, $2)\n                    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "7f9ff36b4618aca8c590fbfb0a6748126413c116c2a81ae82bff4b4ecec0ae53"
+}

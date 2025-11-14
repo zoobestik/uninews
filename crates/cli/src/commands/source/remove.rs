@@ -5,7 +5,7 @@ use self::atom::{RemoveAtom, remove_atom_source};
 use self::telegram::{RemoveTelegram, remove_telegram_source};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use news_core::repos::source::SourceRepository;
+use news_core::services::source::SourceService;
 use std::sync::Arc;
 
 #[derive(Parser, Debug)]
@@ -28,7 +28,7 @@ pub enum RemoveCommands {
 }
 
 pub async fn remove_source(
-    sources: Arc<impl SourceRepository + 'static>,
+    sources: Arc<impl SourceService + 'static>,
     command: RemoveCommand,
 ) -> Result<()> {
     match command.command {

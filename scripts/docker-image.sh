@@ -49,7 +49,7 @@ done
 
 # Get version from Cargo.toml
 BOT_VERSION=$(grep -m1 "^version = " Cargo.toml | cut -d'"' -f2)
-IMAGE="zoobestik/my-rss-server"
+IMAGE="zoobestik/uninews"
 
 echo "Building Docker image..."
 echo "  Image: $IMAGE"

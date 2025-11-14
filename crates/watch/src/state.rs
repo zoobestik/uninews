@@ -1,31 +1,31 @@
-use news_core::repos::news::NewsRepository;
-use news_core::repos::source::SourceRepository;
 use news_core::services::HttpService;
+use news_core::services::news::NewsService;
+use news_core::services::source::SourceService;
 use news_sqlite_core::db::init::DBInitError;
-use news_sqlite_core::repos::news::SqliteNewsRepository;
-use news_sqlite_core::repos::source::SqliteSourceRepository;
 use news_sqlite_core::services::http::LiveHttpService;
+use news_sqlite_core::services::news::SqliteNewsService;
+use news_sqlite_core::services::source::SqliteSourceService;
 use std::sync::Arc;
 use thiserror::Error;
 use tokio::sync::OnceCell;
 
-pub struct AppState {
-    sources: OnceCell<Arc<dyn SourceRepository>>,
-    news: OnceCell<Arc<dyn NewsRepository>>,
-    http: OnceCell<Arc<dyn HttpService>>,
+pub struct LiveAppState {
+    sources: OnceCell<Arc<SqliteSourceService>>,
+    news: OnceCell<Arc<SqliteNewsService>>,
+    http: OnceCell<Arc<LiveHttpService>>,
 }
 
 #[derive(Error, Debug)]
 #[error("failed to initialize {0}")]
 pub struct StateError(#[source] DBInitError);
 
-impl Default for AppState {
+impl Default for LiveAppState {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl AppState {
+impl LiveAppState {
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -35,12 +35,11 @@ impl AppState {
         }
     }
 
-    pub async fn sources(&self) -> Result<Arc<dyn SourceRepository>, StateError> {
+    pub async fn sources(&self) -> Result<Arc<impl SourceService + 'static>, StateError> {
         Ok(self
             .sources
             .get_or_try_init(async || {
-                let sources: Arc<dyn SourceRepository> =
-                    Arc::new(SqliteSourceRepository::new().await?);
+                let sources = Arc::new(SqliteSourceService::try_new().await?);
                 Ok(sources)
             })
             .await
@@ -48,11 +47,11 @@ impl AppState {
             .clone())
     }
 
-    pub async fn news(&self) -> Result<Arc<dyn NewsRepository>, StateError> {
+    pub async fn news(&self) -> Result<Arc<impl NewsService + 'static>, StateError> {
         Ok(self
             .news
             .get_or_try_init(async || {
-                let news: Arc<dyn NewsRepository> = Arc::new(SqliteNewsRepository::new().await?);
+                let news = Arc::new(SqliteNewsService::try_new().await?);
                 Ok(news)
             })
             .await
@@ -60,12 +59,9 @@ impl AppState {
             .clone())
     }
 
-    pub async fn http(&self) -> Arc<dyn HttpService> {
+    pub async fn http(&self) -> Arc<impl HttpService + 'static> {
         self.http
-            .get_or_init(async || {
-                let http: Arc<dyn HttpService> = Arc::new(LiveHttpService::new());
-                http
-            })
+            .get_or_init(async || Arc::new(LiveHttpService::new()))
             .await
             .clone()
     }

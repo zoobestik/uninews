@@ -1365,8 +1365,6 @@ dependencies = [
  "async-trait",
  "chrono",
  "reqwest",
- "serde",
- "sqlx",
  "thiserror",
  "url",
  "uuid",
@@ -1399,7 +1397,6 @@ dependencies = [
  "news_core",
  "news_sqlite_core",
  "scraper",
- "serde",
  "thiserror",
  "tokio",
  "tracing",
@@ -1998,7 +1995,6 @@ dependencies = [
  "html5ever",
  "precomputed-hash",
  "selectors",
- "serde",
  "tendril",
 ]
 
@@ -2905,7 +2901,6 @@ checksum = "2f87b8aa10b915a06587d0dec516c282ff295b475d94abf425d62b57710070a2"
 dependencies = [
  "getrandom 0.3.4",
  "js-sys",
- "serde",
  "sha1_smol",
  "wasm-bindgen",
 ]

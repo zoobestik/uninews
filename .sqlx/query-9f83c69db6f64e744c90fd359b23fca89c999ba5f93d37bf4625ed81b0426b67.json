@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO persistence_uuid (internal_id, group_type)\n            VALUES (?1, ?2)\n            ON CONFLICT(group_type) DO UPDATE SET internal_id = internal_id\n            RETURNING internal_id as \"uuid: Uuid\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "uuid: Uuid",
+        "ordinal": 0,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "9f83c69db6f64e744c90fd359b23fca89c999ba5f93d37bf4625ed81b0426b67"
+}

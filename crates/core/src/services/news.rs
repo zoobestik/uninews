@@ -6,7 +6,7 @@ use thiserror::Error;
 use uuid::Uuid;
 
 #[derive(Error, Debug)]
-pub enum NewsUpdateError {
+pub enum UpdateError {
     #[error("Failed to update news item with title={title} and id={id}: {error}")]
     UpdateItem {
         id: Uuid,
@@ -19,6 +19,6 @@ pub enum NewsUpdateError {
 }
 
 #[async_trait]
-pub trait NewsRepository: Send + Sync {
-    async fn update(&self, news: &[Arc<dyn News>]) -> Result<(), NewsUpdateError>;
+pub trait NewsService: Send + Sync {
+    async fn update(&self, news: &[Arc<impl News>]) -> Result<(), UpdateError>;
 }

@@ -1,12 +1,11 @@
 use async_trait::async_trait;
 use news_core::models::news::News;
-use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug)]
 pub struct TelegramItem {
     pub parent_id: Uuid,
-    pub source_id: Uuid,
+    pub source_id: String,
 
     pub title: String,
     pub description: String,
@@ -14,8 +13,8 @@ pub struct TelegramItem {
 
 #[async_trait]
 impl News for TelegramItem {
-    fn source_id(&self) -> Uuid {
-        self.source_id
+    fn source_id(&self) -> &str {
+        self.source_id.as_str()
     }
     fn parent_id(&self) -> Uuid {
         self.parent_id

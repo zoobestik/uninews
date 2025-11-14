@@ -21,8 +21,7 @@ futures.workspace = true
 htmd = { version = "^0.4.0" }
 # ID:  RUSTSEC-2025-0057
 # URL: https://rustsec.org/advisories/RUSTSEC-2025-0057
-scraper = { git = "https://github.com/rust-scraper/scraper.git", rev = "3fca4f1", features = ["serde"] }
-serde.workspace = true
+scraper = { git = "https://github.com/rust-scraper/scraper.git", rev = "3fca4f1" }
 thiserror.workspace = true
 tokio.workspace = true
 tracing.workspace = true

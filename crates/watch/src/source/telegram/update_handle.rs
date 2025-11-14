@@ -1,16 +1,15 @@
 use super::item::TelegramItem;
 use super::parse::{ParseHtmlError, parse_html};
-use crate::state::AppState;
+use crate::state::LiveAppState;
 use async_trait::async_trait;
-use news_core::models::news::News;
 use news_core::models::source::telegram::TelegramSource;
+use news_core::services::news::NewsService;
 use news_core::services::{HandleError, HttpResponse, HttpUpdateHandle};
-use news_core::uuid::gen_consistent_uuid;
 use std::sync::Arc;
 use url::Url;
 
 pub struct TelegramWebUpdateHandle {
-    pub app_state: Arc<AppState>,
+    pub app_state: Arc<LiveAppState>,
     pub source: TelegramSource,
     pub url: Url,
 }
@@ -45,15 +44,15 @@ impl HttpUpdateHandle for TelegramWebUpdateHandle {
 
         let result = parse_html(&html_content).await?;
 
-        let update: Vec<_> = result
+        let update: Vec<Arc<TelegramItem>> = result
             .into_iter()
             .map(|(title, description)| {
                 Arc::new(TelegramItem {
                     parent_id: self.source.id,
-                    source_id: gen_consistent_uuid(&self.source.id, &description),
+                    source_id: description.clone(),
                     title,
                     description,
-                }) as Arc<dyn News>
+                })
             })
             .collect();
 

@@ -1,14 +1,14 @@
 use anyhow::Result;
 use clap::Args;
 use news_core::models::source::SourceEnum::{Atom, Telegram};
-use news_core::repos::source::SourceRepository;
+use news_core::services::source::SourceService;
 use std::sync::Arc;
 
 #[derive(Debug, Args)]
 pub struct ArgsList {}
 
 pub async fn list_sources(
-    sources: Arc<impl SourceRepository + 'static>,
+    sources: Arc<impl SourceService + 'static>,
     _args: ArgsList,
 ) -> Result<()> {
     for source in sources.get_all().await? {

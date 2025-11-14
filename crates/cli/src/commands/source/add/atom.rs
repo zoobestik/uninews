@@ -3,8 +3,8 @@ use crate::report::{ReportExt, ReportStatus};
 use anyhow::{Context, Result};
 use clap::Args;
 use news_core::models::source::atom::AtomDraft;
-use news_core::repos::SourceDraft::Atom;
-use news_core::repos::source::SourceRepository;
+use news_core::services::source::SourceDraft::Atom;
+use news_core::services::source::SourceService;
 use news_sqlite_core::utils::parse::parse_url;
 use std::sync::Arc;
 use url::Url;
@@ -16,7 +16,7 @@ pub struct AddAtom {
 }
 
 pub async fn add_atom_source(
-    sources: Arc<impl SourceRepository + 'static>,
+    sources: Arc<impl SourceService + 'static>,
     args: AddAtom,
 ) -> Result<()> {
     Report::silent(move |task| {

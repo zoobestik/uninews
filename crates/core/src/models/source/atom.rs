@@ -1,15 +1,11 @@
-use super::SourceType;
-use super::SourceType::Atom;
-use crate::uuid::gen_consistent_uuid;
+use crate::models::ExternalEntity;
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
 use url::Url;
 use uuid::Uuid;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug)]
 pub struct AtomSource {
     pub id: Uuid,
-    pub source: SourceType,
     pub created_at: DateTime<Utc>,
 
     pub url: Url,
@@ -21,7 +17,6 @@ impl AtomSource {
         Self {
             id,
             url,
-            source: Atom,
             created_at,
         }
     }
@@ -29,17 +24,17 @@ impl AtomSource {
 
 pub struct AtomDraft {
     pub url: Url,
-    pub source_id: Uuid,
 }
-
-const ATOM_UUID: Uuid = Uuid::from_u128(0x0000_0000_0000_0000_0000_0000_0000_0001);
 
 impl AtomDraft {
     #[must_use]
     pub fn new(url: Url) -> Self {
-        Self {
-            source_id: gen_consistent_uuid(&ATOM_UUID, url.as_str()),
-            url,
-        }
+        Self { url }
+    }
+}
+
+impl ExternalEntity for AtomDraft {
+    fn source_key(&self) -> &str {
+        self.url.as_str()
     }
 }

@@ -1,29 +1,33 @@
+use super::uuid::{SqliteUuidService, UpsertMapping, UuidGroup};
 use crate::db::errors::SqlxServiceError;
 use crate::db::errors::SqlxServiceError::{DBInit, Execute, Transaction};
 use crate::db::init::{DBInitError, init_db_pool};
-use crate::db::mapping::upsert_uuid_mapping;
 use async_trait::async_trait;
 use news_core::models::news::News;
-use news_core::repos::news::NewsUpdateError::{Internal, UpdateItem};
-use news_core::repos::news::{NewsRepository, NewsUpdateError};
+use news_core::services::news::NewsService;
+use news_core::services::news::UpdateError;
+use news_core::services::news::UpdateError::{Internal, UpdateItem};
 use sqlx::{SqlitePool, query};
 use std::collections::HashMap;
 use std::sync::Arc;
+use tokio::try_join;
 use tracing::info;
 use uuid::Uuid;
 
-pub struct SqliteNewsRepository {
+pub struct SqliteNewsService {
     db_pool: SqlitePool,
+    uuid_repo: SqliteUuidService,
 }
 
-impl SqliteNewsRepository {
-    pub async fn new() -> Result<Self, DBInitError> {
-        Ok(Self {
-            db_pool: init_db_pool().await?,
-        })
+impl SqliteNewsService {
+    pub async fn try_new() -> Result<Self, DBInitError> {
+        let (db_pool, uuid_repo) = try_join!(init_db_pool(), SqliteUuidService::init_lazy())?;
+
+        Ok(Self { db_pool, uuid_repo })
     }
 
-    async fn update_news(&self, news: &[Arc<dyn News>]) -> Result<(), SqlxServiceError> {
+    async fn update(&self, news: &[Arc<impl News>]) -> Result<(), SqlxServiceError> {
+        let uuid_repo = &self.uuid_repo;
         let mut tx = self.db_pool.begin().await.map_err(Transaction)?;
 
         let mut modified: HashMap<Uuid, usize> = HashMap::new();
@@ -31,7 +35,16 @@ impl SqliteNewsRepository {
         for news in news {
             let source_id = news.source_id();
 
-            let id = upsert_uuid_mapping(&mut *tx, &source_id).await?;
+            let id = {
+                let upsert_id = uuid_repo
+                    .upsert_uuid_mapping(&mut tx, UuidGroup::News, source_id)
+                    .await?;
+
+                match upsert_id {
+                    UpsertMapping::Existing(id) | UpsertMapping::New(id) => id,
+                }
+            };
+
             let parent_id = news.parent_id();
             let title = news.title();
             let description = news.description();
@@ -91,9 +104,9 @@ impl SqliteNewsRepository {
 }
 
 #[async_trait]
-impl NewsRepository for SqliteNewsRepository {
-    async fn update(&self, news: &[Arc<dyn News>]) -> Result<(), NewsUpdateError> {
-        self.update_news(news).await.map_err(|e| match e {
+impl NewsService for SqliteNewsService {
+    async fn update(&self, news: &[Arc<impl News>]) -> Result<(), UpdateError> {
+        self.update(news).await.map_err(|e| match e {
             Execute {
                 id,
                 identifier,

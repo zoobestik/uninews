@@ -32,9 +32,8 @@ impl LiveHttpService {
             return Err(ExternalServiceError {
                 service: "http".to_string(),
                 message: format!(
-                    "HTTP request failed with status[{}] for {}",
+                    "HTTP request failed with status[{}] for {url_str}",
                     response.status(),
-                    url_str
                 ),
             });
         }

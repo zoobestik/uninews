@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO uuid_mappings (internal_id, external_id)\n            VALUES ($1, $2)\n            ON CONFLICT(external_id) DO UPDATE SET internal_id = internal_id\n            RETURNING internal_id as \"internal_id: Uuid\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "internal_id: Uuid",
+        "ordinal": 0,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "23edd5c7db56abfedbe6200e11ebda43969f838e819cb4078bda0c0e8c74b19c"
+}

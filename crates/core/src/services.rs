@@ -1,3 +1,6 @@
+pub mod news;
+pub mod source;
+
 use crate::errors::Internal;
 use async_trait::async_trait;
 use reqwest::Response;
@@ -23,8 +26,5 @@ pub struct WatchError(#[from] Internal);
 
 #[async_trait]
 pub trait HttpService: Send + Sync {
-    async fn watch_changes(
-        &self,
-        update_handler: Arc<dyn HttpUpdateHandle>,
-    ) -> Result<(), WatchError>;
+    async fn watch_changes(&self, handler: Arc<dyn HttpUpdateHandle>) -> Result<(), WatchError>;
 }

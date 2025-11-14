@@ -5,26 +5,21 @@ use futures::future::try_join_all;
 use futures::{TryFutureExt, try_join};
 use news_core::models::news::News;
 use news_core::models::source::atom::AtomSource;
-use news_core::uuid::gen_consistent_uuid;
-use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use thiserror::Error;
-use url::Url;
 use uuid::Uuid;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug)]
 pub struct AtomItem {
     parent_id: Uuid,
-    source_id: Uuid,
+    source_id: String,
 
-    link: Option<String>,
-    guid: String,
-
+    // link: Option<String>,
+    // guid: String,
     title: String,
     description: String,
-    image: Option<Url>,
-    published_at: Option<String>,
-
+    // image: Option<Url>,
+    // published_at: Option<String>,
     content: Option<String>,
 }
 
@@ -47,10 +42,10 @@ pub enum AtomItemFromEntryError {
 pub async fn atom_items_parse(
     src: &AtomSource,
     data: Feed,
-) -> Result<Vec<Arc<dyn News>>, AtomItemFromEntryError> {
+) -> Result<Vec<Arc<AtomItem>>, AtomItemFromEntryError> {
     let news_futures = data.entries.into_iter().map(async |item| {
         let news_item = try_atom_item_from_entry(src, item).await?;
-        Ok::<Arc<dyn News>, AtomItemFromEntryError>(Arc::new(news_item))
+        Ok(Arc::new(news_item))
     });
 
     try_join_all(news_futures).await
@@ -76,7 +71,6 @@ pub async fn try_atom_item_from_entry(
     };
 
     let parent_id = source.id;
-    let source_id = gen_consistent_uuid(&parent_id, id);
 
     let title = item
         .title
@@ -106,27 +100,26 @@ pub async fn try_atom_item_from_entry(
 
     let (title, description) = try_join!(future_title, future_description)?;
 
-    let published_at = item.published.map(|dt| dt.to_string());
+    // let published_at = item.published.map(|dt| dt.to_string());
 
     Ok(AtomItem {
         parent_id,
-        source_id,
+        source_id: id.clone(),
 
         title,
         description,
         content: None,
-
-        guid: item.id,
-        link,
-        image: None,
-        published_at,
+        // guid: item.id,
+        // link,
+        // image: None,
+        // published_at,
     })
 }
 
 #[async_trait]
 impl News for AtomItem {
-    fn source_id(&self) -> Uuid {
-        self.source_id
+    fn source_id(&self) -> &str {
+        self.source_id.as_str()
     }
     fn parent_id(&self) -> Uuid {
         self.parent_id

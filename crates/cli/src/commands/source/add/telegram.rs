@@ -4,8 +4,8 @@ use SourceDraft::Telegram;
 use anyhow::{Context, Result};
 use clap::Args;
 use news_core::models::source::telegram::TelegramDraft;
-use news_core::repos::SourceDraft;
-use news_core::repos::source::SourceRepository;
+use news_core::services::source::SourceDraft;
+use news_core::services::source::SourceService;
 use news_sqlite_core::utils::parse::parse_telegram_username;
 use std::sync::Arc;
 
@@ -16,7 +16,7 @@ pub struct AddTelegram {
 }
 
 pub async fn add_telegram_source(
-    sources: Arc<impl SourceRepository + 'static>,
+    sources: Arc<impl SourceService + 'static>,
     args: AddTelegram,
 ) -> Result<()> {
     Report::silent(move |task| {
@@ -27,7 +27,7 @@ pub async fn add_telegram_source(
             sources
                 .add(Telegram(draft))
                 .await
-                .context(format!("Failed to add Telegram channel: {}", username))?;
+                .context(format!("Failed to add Telegram channel: {username}"))?;
 
             task.finish_with_text(format!("Telegram channel added successfully: {username}"));
             Ok(())
