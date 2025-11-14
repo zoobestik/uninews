@@ -1,0 +1,6 @@
+services:
+  uninews:
+    image: zoobestik/my-rss-server:latest
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
