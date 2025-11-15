@@ -10,6 +10,8 @@
 /data
 /out
 
+/*.sh
+
 *.DS_Store
 ._*
 .DocumentRevisions-V100
