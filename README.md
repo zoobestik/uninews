@@ -11,8 +11,10 @@ Status: early alpha; behavior will evolve. The `--watch` flag is experimental.
 - Single binary: `uninews`
 - SQLite storage with automatic migrations
 - Manage sources: add/list/remove (Atom/RSS and Telegram) with validation
-- One-shot collection; planned continuous mode via `--watch`
-- Logging controlled by `RUST_LOG`
+- One-shot collection with experimental `--watch` mode for continuous monitoring
+- Docker support with Alpine-based images
+- Colorized output with enhanced error reporting
+- Logging controlled by `RUST_LOG` and `DEBUG` environment variables
 
 ## Quickstart
 Build the release binary:
@@ -38,6 +40,25 @@ cargo run -p news_cli -- --help
 ```
 
 To install the binary into your PATH, see [Installation](docs/installation.md).
+
+## Docker
+
+UniNews supports Docker deployment with a minimal Alpine-based image.
+
+Pull and run the official image:
+
+```bash
+docker pull zoobestik/uninews:latest
+docker run -v $(pwd)/data:/app/data zoobestik/uninews:latest
+```
+
+Or use docker-compose:
+
+```bash
+docker-compose up -d
+```
+
+For more details, see [Installation → Docker](docs/installation.md#docker).
 
 ## Documentation
 - Start → [docs/home.md](docs/home.md)

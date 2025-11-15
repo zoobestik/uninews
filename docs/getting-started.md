@@ -14,6 +14,20 @@ This guide helps you install UniNews, initialize the database, add sources, and 
 
 Install the release binary once as described in [Installation](./installation.md). All examples below assume `uninews` is available in your PATH.
 
+### Docker alternative
+
+If you prefer Docker, you can use the official image instead:
+
+```bash
+# Pull the image
+docker pull zoobestik/uninews:latest
+
+# Initialize database
+docker run --rm -v $(pwd)/data:/app/data zoobestik/uninews:latest uninews init --force
+```
+
+For detailed Docker instructions, see [Installation → Docker](./installation.md#docker).
+
 ## Initialize the app
 
 Initialization creates the SQLite database and required folders.
@@ -76,7 +90,8 @@ Note about `--watch`:
 
 - Default database path: `data/app.sqlite`.
 - You can change the database file path using `UNINEWS_DB_PATH`.
-- Logging level is controlled by the environment filter (e.g., `RUST_LOG=debug`).
+- Logging level is controlled by environment variables (`RUST_LOG` or `DEBUG`).
+- Color output is controlled by terminal capabilities and `NO_COLOR` variable.
 
 Examples:
 
@@ -86,6 +101,12 @@ UNINEWS_DB_PATH=/tmp/uninews.sqlite uninews init --force
 
 # Enable debug logs
 RUST_LOG=debug uninews collect
+
+# Enable debug mode with color output
+DEBUG=1 uninews collect
+
+# Disable colors for scripting
+NO_COLOR=1 uninews collect > output.log
 ```
 
 Migrations are applied automatically during `uninews init` from the `migrations/` folder.
