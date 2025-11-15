@@ -12,7 +12,7 @@ use uuid::Uuid;
 #[derive(Debug)]
 pub struct AtomItem {
     parent_id: Uuid,
-    source_id: String,
+    source_key: String,
 
     // link: Option<String>,
     // guid: String,
@@ -104,7 +104,7 @@ pub async fn try_atom_item_from_entry(
 
     Ok(AtomItem {
         parent_id,
-        source_id: id.clone(),
+        source_key: id.clone(),
 
         title,
         description,
@@ -118,8 +118,8 @@ pub async fn try_atom_item_from_entry(
 
 #[async_trait]
 impl News for AtomItem {
-    fn source_id(&self) -> &str {
-        self.source_id.as_str()
+    fn source_key(&self) -> &str {
+        self.source_key.as_str()
     }
     fn parent_id(&self) -> Uuid {
         self.parent_id

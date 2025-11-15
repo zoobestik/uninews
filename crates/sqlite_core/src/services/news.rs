@@ -33,11 +33,11 @@ impl SqliteNewsService {
         let mut modified: HashMap<Uuid, usize> = HashMap::new();
 
         for news in news {
-            let source_id = news.source_id();
+            let source_key = news.source_key();
 
             let id = {
                 let upsert_id = uuid_repo
-                    .upsert_uuid_mapping(&mut tx, UuidGroup::News, source_id)
+                    .upsert_uuid_mapping(&mut tx, UuidGroup::News, source_key)
                     .await?;
 
                 match upsert_id {

@@ -49,7 +49,7 @@ impl HttpUpdateHandle for TelegramWebUpdateHandle {
             .map(|(title, description)| {
                 Arc::new(TelegramItem {
                     parent_id: self.source.id,
-                    source_id: description.clone(),
+                    source_key: description.clone(),
                     title,
                     description,
                 })

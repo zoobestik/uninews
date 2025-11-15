@@ -5,7 +5,7 @@ use uuid::Uuid;
 #[derive(Debug)]
 pub struct TelegramItem {
     pub parent_id: Uuid,
-    pub source_id: String,
+    pub source_key: String,
 
     pub title: String,
     pub description: String,
@@ -13,8 +13,8 @@ pub struct TelegramItem {
 
 #[async_trait]
 impl News for TelegramItem {
-    fn source_id(&self) -> &str {
-        self.source_id.as_str()
+    fn source_key(&self) -> &str {
+        self.source_key.as_str()
     }
     fn parent_id(&self) -> Uuid {
         self.parent_id
