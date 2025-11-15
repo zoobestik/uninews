@@ -1,0 +1,44 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT\n                src.id as \"id: Uuid\",\n                src.source as \"source: SourceType\",\n                src.created_at as \"created_at: DateTime<Utc>\",\n                -- atom details\n                atom.url as \"atom_url: Url\",\n                -- telegram details\n                tg.username as \"telegram_username: String\"\n            FROM sources src\n            LEFT JOIN\n                source_atom_details atom ON src.id = atom.atom_details_id\n            LEFT JOIN\n                source_telegram_details tg ON src.id = tg.telegram_details_id\n            WHERE\n                src.id = ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id: Uuid",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "source: SourceType",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at: DateTime<Utc>",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "atom_url: Url",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "telegram_username: String",
+        "ordinal": 4,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "dae3c00d062bd766fd85f24d889fc23c9d357f3b5a4db53f0a6b660ccdc5dbf3"
+}

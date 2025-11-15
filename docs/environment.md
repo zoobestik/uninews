@@ -22,6 +22,24 @@ This page lists environment variables that affect UniNews.
     RUST_LOG=uninews=debug,sqlx=warn uninews collect
     ```
 
+- `DEBUG` — Alternative way to enable verbose output and debug mode.
+  - Default: unset
+  - When set (to any value), enables verbose logging and output
+  - Example:
+    ```bash
+    DEBUG=1 uninews collect
+    ```
+  - Note: `RUST_LOG` takes precedence if both are set
+
+- `NO_COLOR` — Disable colorized output (follows [NO_COLOR standard](https://no-color.org/)).
+  - Default: unset
+  - When set (to any value), disables all color output
+  - Example:
+    ```bash
+    NO_COLOR=1 uninews collect
+    ```
+  - Automatically disabled when output is redirected or terminal doesn't support colors
+
 ## Configuration file
 
 A configuration file is not supported yet. Do not use `UNINEWS_CONFIG_PATH` for now.

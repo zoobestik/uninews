@@ -107,12 +107,25 @@ uninews collect
 
 Options:
 
-- `-w`, `--watch` — Planned: continuously watch sources for updates.
+- `-w`, `--watch` — **Experimental:** Continuously monitor sources for updates. This flag enables long-running mode where UniNews periodically checks sources for new content instead of exiting after one collection cycle.
 
-Current status of `--watch`:
+### Watch mode details
 
-- The flag is experimental and not fully implemented yet.
-- Today, `collect` runs a one-time collection and returns.
+When `--watch` flag is enabled:
+
+- UniNews runs in a continuous loop, checking sources periodically
+- Default check interval: 60 seconds (configurable in code)
+- Automatic exponential backoff on errors (up to 10 minutes)
+- Press Ctrl+C to stop gracefully
+
+**Warning:** Watch mode is experimental and behavior may change in future versions.
+
+Example usage:
+
+```bash
+# Run continuous collection
+RUST_LOG=info uninews collect --watch
+```
 
 Typical errors:
 
@@ -124,3 +137,32 @@ Use debug logs to diagnose problems:
 ```bash
 RUST_LOG=debug uninews collect
 ```
+
+## Output and Reporting
+
+Colors are automatically disabled when:
+- Output is redirected to a file
+- Terminal does not support colors (e.g., basic CI environments)
+- `NO_COLOR` environment variable is set
+
+### Verbosity control
+
+Verbose mode is enabled when:
+- `RUST_LOG` environment variable is set
+- `DEBUG` environment variable is set
+
+Example:
+
+```bash
+# Verbose output with debug logs
+RUST_LOG=debug uninews collect
+
+# Or use DEBUG flag
+DEBUG=1 uninews collect
+```
+
+## See Also
+
+- [Docker Deployment](./docker.md) — Running with Docker
+- [Environment](./environment.md) — Environment variables reference
+- [Troubleshooting](./troubleshooting.md) — Common issues and solutions

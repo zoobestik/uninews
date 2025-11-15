@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                    INSERT INTO sources (id, source)\n                    VALUES ($1, $2)\n                    RETURNING id as \"id: Uuid\"\n                    ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id: Uuid",
+        "ordinal": 0,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "232c5a7074d6612eff115ff643a8ff806a3c91b09bb18ba9c2c827c018f01873"
+}

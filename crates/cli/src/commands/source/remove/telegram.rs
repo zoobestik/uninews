@@ -1,24 +1,37 @@
+use crate::cli::report::Report;
+use crate::report::{ReportExt, ReportStatus};
+use anyhow::{Context, Result};
 use clap::Args;
-use std::error::Error;
+use news_core::models::source::telegram::TelegramDraft;
+use news_core::services::source::SourceDraft;
+use news_core::services::source::SourceService;
+use news_sqlite_core::utils::parse::parse_telegram_username;
 use std::sync::Arc;
-use uninews_core::models::SourceTypeValue;
-use uninews_core::models::telegram::TelegramChannelDraft;
-use uninews_core::parse::parse_telegram_username;
-use uninews_core::services::source::SourceService;
 
 #[derive(Debug, Args)]
-pub struct RemoveTelegramChannel {
+pub struct RemoveTelegram {
     #[arg(value_parser = parse_telegram_username)]
     username: String,
 }
 
-pub async fn remove_telegram_channel_source(
-    sources: Arc<impl SourceService>,
-    args: RemoveTelegramChannel,
-) -> Result<(), Box<dyn Error>> {
-    let source_id = TelegramChannelDraft::new(args.username).source_id;
-    sources
-        .delete_with_type(source_id, SourceTypeValue::Telegram)
-        .await?;
-    Ok(())
+pub async fn remove_telegram_source(
+    sources: Arc<impl SourceService + 'static>,
+    args: RemoveTelegram,
+) -> Result<()> {
+    Report::silent(move |task| {
+        Box::pin(async move {
+            let username = args.username;
+            let draft = TelegramDraft::new(username.clone());
+
+            sources
+                .drop_by(SourceDraft::Telegram(draft))
+                .await
+                .context(format!("Failed to remove Telegram channel: {username}"))?;
+
+            task.finish_with_text(format!("Telegram channel removed successfully: {username}"));
+
+            Ok(())
+        })
+    })
+    .await
 }

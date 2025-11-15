@@ -1,5 +1,5 @@
 [package]
-name = "uninews_core"
+name = "news_core"
 
 authors.workspace = true
 description.workspace = true
@@ -10,19 +10,10 @@ publish.workspace = true
 repository.workspace = true
 version.workspace = true
 
-[lib]
-name = "uninews_core"
-path = "src/lib.rs"
-
 [dependencies]
 async-trait.workspace = true
 chrono.workspace = true
-clap.workspace = true
-futures.workspace = true
 reqwest.workspace = true
-serde.workspace = true
-sqlx.workspace = true
-tokio.workspace = true
-tracing.workspace = true
+thiserror.workspace = true
 url.workspace = true
 uuid.workspace = true

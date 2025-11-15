@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                    INSERT INTO source_atom_details (atom_details_id, url)\n                    VALUES ($1, $2) ON CONFLICT(url) DO NOTHING\n                    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "586ddc90881bce19472e10e12e2210c5defbf440307f6d8030bd99b79a4564f4"
+}

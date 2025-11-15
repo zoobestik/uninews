@@ -10,6 +10,8 @@
 /data
 /out
 
+/*.sh
+
 *.DS_Store
 ._*
 .DocumentRevisions-V100
@@ -25,3 +27,5 @@ $RECYCLE.BIN/
 .Trash-*
 
 /config.toml
+
+.*_reports

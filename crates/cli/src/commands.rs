@@ -1,11 +1,13 @@
+mod collect;
 mod init;
 mod source;
 
+use self::collect::{CollectCommand, run_collect};
 use self::init::{InitCommand, init_app};
 use self::source::{SourceCommand, run_source};
+use crate::configure::configure;
+use anyhow::{Context, Result};
 use clap::Subcommand;
-use std::process::exit;
-use uninews_collect::cli::{CollectCommand, run_collect};
 
 #[derive(Subcommand)]
 pub enum Commands {
@@ -14,23 +16,12 @@ pub enum Commands {
     Source(SourceCommand),
 }
 
-pub async fn run_commands(command: Commands) {
-    let result = match command {
-        Commands::Collect(cmd) => run_collect(cmd)
-            .await
-            .map_err(|e| format!("Error in collect command: {e}")),
+pub async fn run_commands(command: Commands) -> Result<()> {
+    configure()?;
 
-        Commands::Init(cmd) => init_app(cmd)
-            .await
-            .map_err(|e| format!("Error initializing database: {e}")),
-
-        Commands::Source(cmd) => run_source(cmd)
-            .await
-            .map_err(|e| format!("Error in source command: {e}")),
-    };
-
-    if let Err(e) = result {
-        eprintln!("{}", e);
-        exit(1);
+    match command {
+        Commands::Collect(cmd) => run_collect(cmd).await.context("Collect command failed"),
+        Commands::Init(cmd) => init_app(cmd).await.context("Initialization failed"),
+        Commands::Source(cmd) => run_source(cmd).await.context("Source command failed"),
     }
 }

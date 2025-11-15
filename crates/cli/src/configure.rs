@@ -1,37 +1,26 @@
-use dotenvy::dotenv;
-use std::process;
-use tracing::dispatcher::SetGlobalDefaultError;
-use tracing::{debug, error};
+use crate::cli::output::OutputConfig;
+use anyhow::{Context, Result};
+use dotenvy::{dotenv, var};
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
-/// Initialize tracing subscriber with environment filters.
-///
-/// This function sets up a global tracing subscriber with thread names, no target, and environment-based filtering.
-/// The default log level is "info" if no environment filter is specified.
-///
-/// # Errors
-///
-/// Returns [`SetGlobalDefaultError`] if setting the global default subscriber fails, which can happen
-/// if a global default subscriber was already set.
-pub fn init_logger() -> Result<(), SetGlobalDefaultError> {
-    let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+pub fn init_logger() -> Result<()> {
+    let log_level = match OutputConfig::is_verbose() {
+        true => "debug".to_string(),
+        false => var("RUST_LOG").unwrap_or_else(|_| "info".to_string()),
+    };
 
     let subscriber = FmtSubscriber::builder()
         .with_thread_names(true)
         .with_target(false)
-        .with_env_filter(filter)
+        .with_env_filter(EnvFilter::new(log_level))
         .finish();
 
     tracing::subscriber::set_global_default(subscriber)
+        .context("Failed to set global default subscriber")
 }
 
-pub fn configure() {
-    if let Err(e) = init_logger() {
-        error!("Failed to initialize logger: {e}");
-        process::exit(1);
-    }
-
+pub fn configure() -> Result<()> {
+    init_logger()?;
     dotenv().ok();
-
-    debug!("[init_cli]: prepared");
+    Ok(())
 }

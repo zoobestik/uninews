@@ -1,10 +1,12 @@
+use crate::cli::report::Report;
+use crate::report::{ReportExt, ReportStatus};
+use anyhow::{Context, Result};
 use clap::Args;
-use std::error::Error;
+use news_core::models::source::atom::AtomDraft;
+use news_core::services::source::SourceDraft;
+use news_core::services::source::SourceService;
+use news_sqlite_core::utils::parse::parse_url;
 use std::sync::Arc;
-use uninews_core::models::SourceTypeValue;
-use uninews_core::models::atom::AtomDraft;
-use uninews_core::parse::parse_url;
-use uninews_core::services::source::SourceService;
 use url::Url;
 
 #[derive(Debug, Args)]
@@ -14,10 +16,22 @@ pub struct RemoveAtom {
 }
 
 pub async fn remove_atom_source(
-    sources: Arc<impl SourceService>,
+    sources: Arc<impl SourceService + 'static>,
     args: RemoveAtom,
-) -> Result<(), Box<dyn Error>> {
-    let id = AtomDraft::new(args.url).source_id;
-    sources.delete_with_type(id, SourceTypeValue::Atom).await?;
-    Ok(())
+) -> Result<()> {
+    Report::silent(move |task| {
+        Box::pin(async move {
+            let draft = AtomDraft::new(args.url);
+            let url = draft.url.to_string();
+
+            sources
+                .drop_by(SourceDraft::Atom(draft))
+                .await
+                .context(format!("Failed to remove Atom feed: {url}"))?;
+
+            task.finish_with_text(format!("Atom source removed successfully: {url}"));
+            Ok(())
+        })
+    })
+    .await
 }

@@ -47,4 +47,15 @@ Use `UNINEWS_DB_PATH` to move the database file:
 UNINEWS_DB_PATH=/tmp/uninews.sqlite uninews init --force
 ```
 
+In Docker environments, the path should point to a location within a mounted volume:
+
+```bash
+docker run --rm \
+  -v $(pwd)/data:/app/data \
+  -e UNINEWS_DB_PATH=/app/data/custom.sqlite \
+  zoobestik/uninews:latest uninews init --force
+```
+
+See also: [Docker Deployment](./docker.md).
+
 See also: [Environment](./environment.md).

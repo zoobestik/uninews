@@ -65,3 +65,95 @@ Fix:
 - You can override it with `UNINEWS_DB_PATH`
 
 See also: [Database](./database.md), [Environment](./environment.md).
+
+## Docker Issues
+
+### Permission Denied when accessing database
+
+**Symptom:**
+```
+Error: Failed to initialize database
+  → Permission denied (os error 13)
+```
+
+**Cause:** Docker container runs as UID 1000, but host directory has different ownership.
+
+**Solution:**
+```bash
+# Fix directory ownership
+sudo chown -R 1000:1000 data/
+
+# Or create directory with correct permissions before first run
+mkdir -p data && sudo chown 1000:1000 data
+```
+
+### Database is Locked
+
+**Symptom:**
+```
+Error: database is locked
+```
+
+**Cause:** Multiple containers trying to access the same SQLite database.
+
+**Solution:**
+```bash
+# Stop all running containers
+docker ps | grep uninews | awk '{print $1}' | xargs docker stop
+
+# Remove stopped containers
+docker ps -a | grep uninews | awk '{print $1}' | xargs docker rm
+
+# Start single container
+docker-compose up -d
+```
+
+### Container Exits Immediately
+
+**Symptom:** Container stops right after starting (when using `docker-compose up -d`)
+
+**Cause:** Database not initialized, or no sources configured.
+
+**Solution:**
+```bash
+# Check logs
+docker-compose logs uninews
+
+# Initialize database
+docker-compose run --rm uninews uninews init --force
+
+# Add at least one source
+docker-compose run --rm uninews uninews source add atom https://example.com/feed.xml
+
+# Restart service
+docker-compose up -d
+```
+
+## Output and Display Issues
+
+### Colors Not Working in Terminal
+
+**Symptom:** Output shows ANSI escape codes like `\033[32m` instead of colors.
+
+**Cause:** Terminal doesn't support ANSI colors.
+
+**Solution:**
+```bash
+# Disable colors explicitly
+NO_COLOR=1 uninews collect
+
+# Or update your terminal emulator to one that supports colors
+```
+
+### Colors Showing in Log Files
+
+**Symptom:** Log files contain ANSI escape codes making them hard to read.
+
+**Solution:**
+```bash
+# Disable colors when redirecting
+NO_COLOR=1 uninews collect > output.log 2>&1
+
+# Or strip colors from existing log
+sed 's/\x1b\[[0-9;]*m//g' output.log > clean.log
+```

@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT\n                internal_id as \"uuid: Uuid\"\n            FROM persistence_uuid\n            WHERE group_type = ?1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "uuid: Uuid",
+        "ordinal": 0,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "6024012c4bb89c0af75583fffbeb82d49c3e5738d7dc74fe9a830d076ab6ea56"
+}

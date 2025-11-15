@@ -3,14 +3,12 @@ mod list;
 mod remove;
 
 use self::add::{AddCommand, add_source};
+use self::list::{ArgsList, list_sources};
 use self::remove::{RemoveCommand, remove_source};
-use crate::commands::source::list::{ArgsList, list_sources};
+use anyhow::Result;
 use clap::{Parser, Subcommand};
-use sqlx::SqlitePool;
-use std::error::Error;
+use news_sqlite_core::services::source::SqliteSourceService;
 use std::sync::Arc;
-use uninews_core::fs::get_db_uri;
-use uninews_core::services::source::sqlite::SqliteSourceService;
 
 #[derive(Parser, Debug)]
 #[command(
@@ -30,9 +28,8 @@ pub enum SourceCommands {
     Remove(RemoveCommand),
 }
 
-pub async fn run_source(cmd: SourceCommand) -> Result<(), Box<dyn Error>> {
-    let db_pool = SqlitePool::connect(&get_db_uri()?).await?;
-    let source_service = Arc::new(SqliteSourceService::new(db_pool));
+pub async fn run_source(cmd: SourceCommand) -> Result<()> {
+    let source_service = Arc::new(SqliteSourceService::try_new().await?);
 
     match cmd.command {
         SourceCommands::Add(cmd) => add_source(source_service, cmd).await,

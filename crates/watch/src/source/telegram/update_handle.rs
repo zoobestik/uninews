@@ -1,0 +1,67 @@
+use super::item::TelegramItem;
+use super::parse::{ParseHtmlError, parse_html};
+use crate::state::LiveAppState;
+use async_trait::async_trait;
+use news_core::models::source::telegram::TelegramSource;
+use news_core::services::news::NewsService;
+use news_core::services::{HandleError, HttpResponse, HttpUpdateHandle};
+use std::sync::Arc;
+use url::Url;
+
+pub struct TelegramWebUpdateHandle {
+    pub app_state: Arc<LiveAppState>,
+    pub source: TelegramSource,
+    pub url: Url,
+}
+
+// ========== Error conversions ==========
+
+impl From<ParseHtmlError> for HandleError {
+    fn from(err: ParseHtmlError) -> Self {
+        match err {
+            ParseHtmlError::TitleSelector(_e) => todo!(),
+            ParseHtmlError::TitleConvert(_e) => todo!(),
+            ParseHtmlError::BodySelector(_e) => todo!(),
+            ParseHtmlError::BodyConvert(_e) => todo!(),
+            ParseHtmlError::MessageSelector(_e) => todo!(),
+        }
+    }
+}
+
+// ========== HttpUpdateHandle ==========
+
+#[async_trait]
+impl HttpUpdateHandle for TelegramWebUpdateHandle {
+    fn url(&self) -> &Url {
+        &self.url
+    }
+
+    async fn handle(&self, response: HttpResponse) -> Result<(), HandleError> {
+        let html_content = response
+            .text()
+            .await
+            .map_err(|e| HandleError(Box::new(e)))?;
+
+        let result = parse_html(&html_content).await?;
+
+        let update: Vec<Arc<TelegramItem>> = result
+            .into_iter()
+            .map(|(title, description)| {
+                Arc::new(TelegramItem {
+                    parent_id: self.source.id,
+                    source_key: description.clone(),
+                    title,
+                    description,
+                })
+            })
+            .collect();
+
+        let news = self.app_state.news().await?;
+
+        news.update(&update)
+            .await
+            .map_err(|e| HandleError(Box::new(e)))?;
+
+        Ok(())
+    }
+}

@@ -1,5 +1,5 @@
 [package]
-name = "uninews_cli"
+name = "news_cli"
 
 authors.workspace = true
 description.workspace = true
@@ -15,12 +15,18 @@ name = "uninews"
 path = "src/main.rs"
 
 [dependencies]
+news_core = { path = "../core" }
+news_sqlite_core = { path = "../sqlite_core" }
+news_watch = { path = "../watch" }
+
+anyhow = { version = "^1.0.100" }
+async-trait = { version = "^0.1.89" }
 clap.workspace = true
+console = { version = "^0.16.1" }
 dotenvy.workspace = true
+futures.workspace = true
 sqlx.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
-uninews_collect = { path = "../collect" }
-uninews_core = { path = "../core" }
 url.workspace = true

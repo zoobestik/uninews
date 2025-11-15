@@ -1,17 +1,24 @@
-use crate::commands::{Commands, run_commands};
-use crate::configure::configure;
-use clap::Parser;
-use clap::builder::styling;
-use clap::builder::styling::{AnsiColor, Effects};
+mod errors;
+pub(crate) mod output;
+pub mod report;
 
-const STYLES: styling::Styles = styling::Styles::styled()
-    .header(AnsiColor::Green.on_default().effects(Effects::BOLD))
-    .usage(AnsiColor::Green.on_default().effects(Effects::BOLD))
-    .literal(AnsiColor::Cyan.on_default().effects(Effects::BOLD))
-    // .placeholder(AnsiColor::BrightBlack.on_default())
-    .error(AnsiColor::Red.on_default().effects(Effects::BOLD))
-    .valid(AnsiColor::Cyan.on_default().effects(Effects::BOLD))
-    .invalid(AnsiColor::Yellow.on_default().effects(Effects::BOLD));
+use crate::cli::output::OutputConfig;
+use crate::commands::{Commands, run_commands};
+use clap::Parser;
+use clap::builder::styling::AnsiColor::{Cyan, Green, Red, Yellow};
+use clap::builder::styling::Effects;
+use clap::builder::styling::Styles;
+use console::{colors_enabled, set_colors_enabled};
+use errors::display_error;
+use std::process::exit;
+
+const STYLES: Styles = Styles::styled()
+    .header(Green.on_default().effects(Effects::BOLD))
+    .usage(Green.on_default().effects(Effects::BOLD))
+    .literal(Cyan.on_default().effects(Effects::BOLD))
+    .error(Red.on_default().effects(Effects::BOLD))
+    .valid(Cyan.on_default().effects(Effects::BOLD))
+    .invalid(Yellow.on_default().effects(Effects::BOLD));
 
 #[derive(Parser)]
 #[command(
@@ -22,9 +29,25 @@ const STYLES: styling::Styles = styling::Styles::styled()
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
+
+    #[arg(short, long, global = true)]
+    verbose: bool,
+
+    #[arg(long, global = true)]
+    no_color: bool,
 }
 
 pub async fn run() {
-    configure();
-    run_commands(Cli::parse().command).await;
+    let cli = Cli::parse();
+
+    if cli.no_color {
+        set_colors_enabled(false);
+    }
+
+    OutputConfig::init(cli.verbose, colors_enabled());
+
+    if let Err(e) = run_commands(cli.command).await {
+        display_error(&e);
+        exit(1);
+    }
 }

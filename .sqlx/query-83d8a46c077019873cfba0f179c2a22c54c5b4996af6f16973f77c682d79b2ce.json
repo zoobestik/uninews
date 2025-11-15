@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                INSERT INTO articles (id, parent_id, title, description, content)\n                VALUES ($1, $2, $3, $4, $5)\n                ON CONFLICT(id) DO UPDATE SET\n                    parent_id = excluded.parent_id,\n                    title = excluded.title,\n                    description = excluded.description,\n                    content = excluded.content,\n                    updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')\n                WHERE\n                    articles.parent_id != excluded.parent_id OR\n                    articles.title != excluded.title OR\n                    articles.description != excluded.description OR\n                    articles.content IS NOT excluded.content OR\n                    (articles.content IS NULL AND excluded.content IS NOT NULL) OR\n                    (articles.content IS NOT NULL AND excluded.content IS NULL)\n                RETURNING\n                    parent_id as \"parent_id: Uuid\"\n                ",
+  "describe": {
+    "columns": [
+      {
+        "name": "parent_id: Uuid",
+        "ordinal": 0,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "83d8a46c077019873cfba0f179c2a22c54c5b4996af6f16973f77c682d79b2ce"
+}

@@ -9,6 +9,7 @@ This documentation helps you install, initialize, and use UniNews. It also expla
 - Command reference → [docs/cli.md](./cli.md)
 - Sources (Atom, Telegram) → [docs/sources.md](./sources.md)
 - Database and migrations → [docs/database.md](./database.md)
+- Docker deployment → [docs/docker.md](./docker.md)
 - Environment variables → [docs/environment.md](./environment.md)
 - Troubleshooting → [docs/troubleshooting.md](./troubleshooting.md)
 
@@ -26,6 +27,7 @@ UniNews is a self-hosted CLI application. It lets you store a list of content so
 - Add a Telegram channel: `uninews source add telegram my_channel`
 - List sources: `uninews source ls`
 - Collect content: `uninews collect`
+- Run with Docker: `docker run -v $(pwd)/data:/app/data zoobestik/uninews:latest`
 
 ## FAQ
 
@@ -37,3 +39,9 @@ UniNews is a self-hosted CLI application. It lets you store a list of content so
 
 - What is `--watch` in `uninews collect`?
   - `--watch` is planned for continuous collection. Today it is experimental and may not change behavior. Use one-time collection for stable runs. See [Collect](./cli.md#collect).
+
+- Can I run UniNews in Docker?
+  - Yes. Official Docker images are available on Docker Hub. See [Installation → Docker](./installation.md#docker) or [Docker Deployment](./docker.md) for details.
+
+- How do I disable colored output?
+  - Set the `NO_COLOR=1` environment variable, or redirect output to a file. Colors are automatically disabled when the terminal doesn't support them. See [CLI → Output and Reporting](./cli.md#output-and-reporting).
