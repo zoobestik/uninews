@@ -24,7 +24,7 @@ pub async fn remove_telegram_source(
             let draft = TelegramDraft::new(username.clone());
 
             sources
-                .drop_by_draft(SourceDraft::Telegram(draft))
+                .drop_by(SourceDraft::Telegram(draft))
                 .await
                 .context(format!("Failed to remove Telegram channel: {username}"))?;
 

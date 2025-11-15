@@ -25,7 +25,7 @@ pub async fn remove_atom_source(
             let url = draft.url.to_string();
 
             sources
-                .drop_by_draft(SourceDraft::Atom(draft))
+                .drop_by(SourceDraft::Atom(draft))
                 .await
                 .context(format!("Failed to remove Atom feed: {url}"))?;
 

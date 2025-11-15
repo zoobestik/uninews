@@ -11,7 +11,7 @@ use news_core::models::source::SourceEnum;
 use news_core::models::source::atom::{AtomDraft, AtomSource};
 use news_core::models::source::telegram::{TelegramDraft, TelegramSource};
 use news_core::services::source::{
-    AddError, DropError, GetAllError, GetError, SourceDraft, SourceService,
+    AddError, DeleteCriteria, DropError, GetAllError, GetError, SourceDraft, SourceService,
 };
 use sqlx::types::chrono::{DateTime, Utc};
 use sqlx::{FromRow, SqlitePool, Type, query, query_as};
@@ -53,7 +53,7 @@ impl SqliteSourceService {
         Ok(Self { db_pool, uuid_repo })
     }
 
-    async fn get_data_by_draft(
+    async fn get_data_by_criteria(
         &self,
         draft: SourceDraft,
     ) -> Result<(Uuid, SourceType), SqlxServiceError> {
@@ -304,9 +304,9 @@ impl SourceService for SqliteSourceService {
         .map(IntoIterator::into_iter)
     }
 
-    async fn drop_by_draft(&self, draft: SourceDraft) -> Result<(), DropError> {
+    async fn drop_by(&self, criteria: DeleteCriteria) -> Result<(), DropError> {
         let (id, source_type) = self
-            .get_data_by_draft(draft)
+            .get_data_by_criteria(criteria)
             .await
             .map_err(|error| DropError(Box::new(error)))?;
 

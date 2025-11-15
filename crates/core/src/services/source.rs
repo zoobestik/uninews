@@ -37,10 +37,12 @@ pub struct GetAllError(#[from] pub Internal);
 #[error(transparent)]
 pub struct DropError(#[from] pub Internal);
 
+pub type DeleteCriteria = SourceDraft;
+
 #[async_trait]
 pub trait SourceService: Send + Sync {
     async fn add(&self, draft: SourceDraft) -> Result<(), AddError>;
     async fn get_by_id(&self, id: Uuid) -> Result<SourceEnum, GetError>;
     async fn get_all(&self) -> Result<impl IntoIterator<Item = SourceEnum>, GetAllError>;
-    async fn drop_by_draft(&self, draft: SourceDraft) -> Result<(), DropError>;
+    async fn drop_by(&self, criteria: DeleteCriteria) -> Result<(), DropError>;
 }

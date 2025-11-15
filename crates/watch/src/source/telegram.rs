@@ -2,10 +2,10 @@ mod item;
 mod parse;
 mod update_handle;
 
-use news_core::services::HttpService;
 use self::update_handle::TelegramWebUpdateHandle;
 use crate::state::LiveAppState;
 use news_core::models::source::telegram::TelegramSource;
+use news_core::services::HttpService;
 use news_core::services::WatchError;
 use std::sync::Arc;
 use tracing::info;
